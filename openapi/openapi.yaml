@@ -1,0 +1,196 @@
+openapi: 3.2.0
+
+info:
+  title: Productos y Configuración de Mercado
+  summary: Documentos legales versionados que se muestran en el registro.
+  description: |
+    API **interna** de Productos y Configuración de Mercado.
+
+    Hoy expone los **documentos legales** del registro (términos y condiciones,
+    tratamiento de datos personales y consulta en centrales de riesgo). Los textos
+    y su versionado viven aquí; **la aceptación del cliente no** — la registra
+    CoreTransaccional a partir de lo que envía la web (tipo y versión aceptados).
+
+    Cada documento es **inmutable**: un cambio de texto se publica como una versión
+    nueva (`V1`, `V2`, …), nunca se modifica la existente. La versión vigente de un
+    tipo es la más alta publicada para su mercado e idioma.
+
+    Consumidores:
+    - **BFF Web** — sirve los textos al registro (los reenvía sin transformarlos).
+
+    No es una API pública. Se expone solo dentro de la malla del clúster.
+
+    Errores en formato **RFC 9457 (Problem Details)**, `application/problem+json`.
+  version: 0.1.0
+  contact:
+    name: Equipo 4Bits
+  license:
+    name: Uso académico MISW4501
+
+servers:
+  - url: http://svc-productos.svc-productos.svc.cluster.local
+    description: Servicio interno (in-cluster)
+
+tags:
+  - name: Documentos legales
+    description: Textos legales versionados por mercado e idioma.
+
+security:
+  - serviceAuth: []
+
+paths:
+  /documentos-legales:
+    get:
+      operationId: listarDocumentosLegalesVigentes
+      tags: [Documentos legales]
+      summary: Documentos legales vigentes, con su contenido
+      description: |
+        Devuelve la versión vigente (la más alta) de cada tipo de documento del
+        mercado e idioma indicados, ya con el contenido completo, en el orden en que
+        el registro los presenta: `terminos`, `open-data`, `open-finance`. Una sola
+        llamada deja listos los tres modales sin más viajes a la red.
+      parameters:
+        - $ref: '#/components/parameters/Mercado'
+        - $ref: '#/components/parameters/Idioma'
+      responses:
+        '200':
+          description: Versión vigente de cada documento del mercado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DocumentoLegal' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+
+  /documentos-legales/{tipo}/versiones/{version}:
+    get:
+      operationId: obtenerVersionDocumentoLegal
+      tags: [Documentos legales]
+      summary: Una versión exacta de un documento (inmutable)
+      description: |
+        Sirve para auditoría ("qué texto exacto aceptó este cliente") y para que el
+        perfil muestre lo aceptado aunque ya exista una versión posterior.
+      parameters:
+        - name: tipo
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/TipoDocumentoLegal' }
+        - name: version
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Version' }
+        - $ref: '#/components/parameters/Mercado'
+        - $ref: '#/components/parameters/Idioma'
+      responses:
+        '200':
+          description: Versión solicitada. Se puede cachear indefinidamente.
+          headers:
+            Cache-Control:
+              description: Una versión publicada nunca cambia.
+              schema: { type: string, example: 'public, max-age=31536000, immutable' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentoLegal' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+components:
+  securitySchemes:
+    serviceAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token de identidad de servicio emitido por la malla / gateway interno.
+        No se aceptan tokens de cliente final directamente contra esta API.
+
+  parameters:
+    Mercado:
+      name: mercado
+      in: query
+      required: true
+      schema: { $ref: '#/components/schemas/Mercado' }
+    Idioma:
+      name: idioma
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-z]{2}-[A-Z]{2}$'
+        default: es-CO
+        examples: [es-CO]
+
+  responses:
+    SolicitudInvalida:
+      description: Parámetros inválidos (mercado, idioma, tipo o versión).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
+    NoEncontrado:
+      description: No existe esa versión para ese mercado e idioma.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
+
+  schemas:
+    Mercado:
+      type: string
+      enum: [CO]
+
+    TipoDocumentoLegal:
+      type: string
+      enum: [terminos, open-data, open-finance]
+      description: |
+        - `terminos` — términos y condiciones y aviso de privacidad.
+        - `open-data` — tratamiento de datos personales.
+        - `open-finance` — consulta en centrales de riesgo (datos financieros).
+
+    Version:
+      type: string
+      pattern: '^V[1-9][0-9]*$'
+      examples: [V1]
+
+    DocumentoLegal:
+      type: object
+      additionalProperties: false
+      required: [tipo, version, titulo, baseLegal, contenido]
+      properties:
+        tipo: { $ref: '#/components/schemas/TipoDocumentoLegal' }
+        version: { $ref: '#/components/schemas/Version' }
+        titulo: { type: string, examples: [Términos y condiciones] }
+        subtitulo:
+          type: string
+          examples: [Las reglas de uso de Solventa. Está corto a propósito.]
+        baseLegal: { type: string, examples: [Ley 527 de 1999] }
+        contenido:
+          type: string
+          description: |
+            Cuerpo del documento con formato (HTML).
+            Etiquetas permitidas: `h3`, `p`, `ul`, `ol`, `li`, `strong`, `em`, `a`, `span`.
+            Atributos permitidos: `href` en `a` (solo esquemas `https` y `mailto`) y
+            `class` (solo valores con prefijo `legal-`, por ejemplo `legal-highlight`).
+            No se permiten `style`, `script`, etiquetas de estilo, imágenes ni manejadores
+            de eventos. La web define el significado visual de cada clase `legal-*`.
+          examples:
+            - '<h3>3 · Para qué la usamos</h3><p>Con buen historial lo que pagas al mes puede bajar hasta <span class="legal-highlight">14 %</span>.</p>'
+        notaPie:
+          type: string
+          description: Texto de pie del documento. Se omite cuando no tiene.
+
+    Problema:
+      description: Error en formato RFC 9457 (Problem Details for HTTP APIs).
+      type: object
+      properties:
+        type: { type: string, format: uri, default: 'about:blank' }
+        title: { type: string }
+        status: { type: integer, minimum: 100, maximum: 599 }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+        errores:
+          type: array
+          description: Detalle por campo cuando aplica (validación).
+          items:
+            type: object
+            properties:
+              campo: { type: string }
+              mensaje: { type: string }

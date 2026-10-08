@@ -1,0 +1,35 @@
+[
+  {
+    "mercado": "CO",
+    "idioma": "es-CO",
+    "tipo": "terminos",
+    "version": 1,
+    "titulo": "Términos y condiciones",
+    "subtitulo": "Las reglas de uso de Solventa. Está corto a propósito.",
+    "baseLegal": "Ley 527 de 1999",
+    "contenido": "<h3>1 · Quién te presta el servicio</h3><p>Solventa Colombia S.A.S., NIT 901.482.117–3, Bogotá. Somos intermediarios de seguros: la póliza la emite la aseguradora que te indicamos antes de pagar.</p><h3>2 · Qué puedes hacer aquí</h3><p>Cotizar, contratar, pagar y administrar tu seguro de vida deudores y de hogar asociado a tu crédito de vivienda.</p><h3>3 · Tu firma electrónica</h3><p>Cuando aceptas desde tu cuenta, esa aceptación vale como tu firma y queda registrada con fecha y hora, según la Ley 527 de 1999.</p><h3>4 · Tus claves</h3><p>Tu usuario y tu clave son personales. Si crees que alguien más los tiene, avísanos y los bloqueamos.</p><h3>5 · Cuándo termina</h3><p>Puedes cerrar tu cuenta cuando quieras. Si tienes póliza activa, sigue vigente hasta que la canceles con la aseguradora.</p><h3>6 · Si algo sale mal</h3><p>Escríbenos a <a href=\"mailto:hola@solventa.co\">hola@solventa.co</a>. También puedes acudir al Defensor del Consumidor Financiero o a la Superintendencia Financiera.</p>",
+    "notaPie": "Aceptar estos términos no te compromete a comprar. Puedes cotizar, mirarlo con calma y salir cuando quieras."
+  },
+  {
+    "mercado": "CO",
+    "idioma": "es-CO",
+    "tipo": "open-data",
+    "version": 1,
+    "titulo": "Tratamiento de datos personales",
+    "subtitulo": "Qué datos tuyos usamos y para qué. Ley 1581 de 2012.",
+    "baseLegal": "Ley 1581 de 2012",
+    "contenido": "<h3>1 · Quién responde por tus datos</h3><p>Solventa Colombia S.A.S., NIT 901.482.117–3, Bogotá. Puedes escribirnos a <a href=\"mailto:datos@solventa.co\">datos@solventa.co</a> o llamar al 601 000 0000.</p><h3>2 · Qué datos recogemos</h3><p>Tu nombre, tipo y número de documento, fecha de nacimiento, correo, celular y los datos de tu crédito: banco, saldo y plazo.</p><h3>3 · Para qué los usamos</h3><p>Calcular tu precio, confirmar que eres tú, contratar y administrar tu seguro, prevenir fraude y lavado de activos, y avisarte de tu seguro.</p><h3>4 · Con quién los compartimos</h3><p>Con la aseguradora que emite la póliza y con el banco de tu crédito, para registrar la cobertura. Con nadie más, y nunca los vendemos.</p><h3>5 · Tus derechos</h3><p>Conocer, actualizar, corregir y borrar tus datos, pedir prueba de esta autorización y revocarla. Respondemos en 15 días hábiles. También puedes reclamar ante la SIC.</p>",
+    "notaPie": "Por ley del sector conservamos tu información mientras tengas póliza y diez años más."
+  },
+  {
+    "mercado": "CO",
+    "idioma": "es-CO",
+    "tipo": "open-finance",
+    "version": 1,
+    "titulo": "Consulta en centrales de riesgo",
+    "subtitulo": "Es opcional. Si la das, tu precio puede bajar.",
+    "baseLegal": "Ley 1266 de 2008",
+    "contenido": "<h3>1 · Qué autorizas</h3><p>Consultar, reportar, procesar y divulgar la información sobre tu comportamiento crediticio, financiero y comercial ante los operadores de información.</p><h3>2 · A quiénes consultamos</h3><p>DataCrédito Experian y TransUnion, antes CIFIN. Son los dos operadores vigilados en Colombia.</p><h3>3 · Para qué la usamos</h3><p>Para conocer tu historial de pago y ajustar tu precio. Con buen historial lo que pagas al mes puede bajar hasta 14 %.</p><h3>4 · Qué reportamos</h3><p>Si contratas, reportamos el pago de tu póliza. Si te atrasas, el dato negativo permanece el doble del tiempo que estuviste en mora, máximo cuatro años desde el día en que pagues.</p><h3>5 · Antes de reportarte</h3><p>Te avisamos con veinte días de anticipación para que puedas ponerte al día o aclarar lo que no reconozcas.</p><h3>6 · Puedes retirarla</h3><p>Quitas esta autorización cuando quieras desde tu perfil. Tu plan vuelve a la tarifa estándar y tu póliza sigue vigente.</p>",
+    "notaPie": "Es opcional. Si no la autorizas puedes seguir igual y calculamos tu cotización solo con los datos que nos diste."
+  }
+]
