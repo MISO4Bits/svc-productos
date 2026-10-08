@@ -1,0 +1,203 @@
+from __future__ import annotations
+
+import logging
+
+import opentelemetry.metrics._internal as otel_metrics_internal
+import opentelemetry.trace as otel_trace_module
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from opentelemetry import context as otel_context
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.semconv._incubating.attributes import code_attributes
+from opentelemetry.util._once import Once
+
+from app.config import Settings
+from app.telemetry import (
+    _AtributosDeTraza,
+    _OtelLoggingHandler,
+    agregar_encabezado_trace_id,
+    setup_telemetry,
+    shutdown_telemetry,
+)
+
+
+def _settings(**overrides) -> Settings:
+    return Settings(**overrides)
+
+
+@pytest.fixture(autouse=True)
+def _contexto_otel_limpio():
+    """Causa raíz confirmada en CI (no reproducible en local, ver commits
+    anteriores de este mismo fix): ``opentelemetry.trace`` y
+    ``opentelemetry.metrics`` guardan el ``TracerProvider``/``MeterProvider``
+    "activo" en variables de módulo protegidas por un ``Once()`` — solo se
+    pueden fijar una vez por *proceso completo*, no una vez por test. El
+    warning real de CI, "A shutdown `MeterProvider` can not provide a
+    `Meter`", lo prueba sin ambigüedad: un test que llama de nuevo
+    ``setup_telemetry(otel_enabled=True)`` después del primero NO logra que
+    su propio ``MeterProvider`` quede activo — sigue instrumentando contra el
+    del primer test, ya apagado (``FastAPIInstrumentor.instrument_app`` en
+    ``app/telemetry.py`` nunca pasa ``meter_provider=meter_provider``
+    explícito, así que cae al global). Correr pruebas que hacen
+    ``setup``/``shutdown_telemetry`` repetidas veces en el mismo proceso no
+    es el escenario que la propia API de OpenTelemetry soporta — por eso no
+    alcanzaba con limpiar el contexto del span (fix anterior): había que
+    resetear también el "ya fijado" de los providers, no solo el span activo.
+    """
+    otel_trace_module._TRACER_PROVIDER = None
+    otel_trace_module._TRACER_PROVIDER_SET_ONCE = Once()
+    otel_metrics_internal._METER_PROVIDER = None
+    otel_metrics_internal._METER_PROVIDER_SET_ONCE = Once()
+    token = otel_context.attach(otel_context.Context())
+    try:
+        yield
+    finally:
+        otel_context.detach(token)
+
+
+@pytest.fixture
+def _app_instrumentada():
+    """Crea el ``FastAPI()`` del test y garantiza ``uninstrument_app`` al
+    terminar — ``FastAPIInstrumentor`` deja registrado el ``tracer_provider``
+    contra esta instancia de app; sin desinstrumentar, un test posterior con
+    ``otel_enabled=False`` que reutilice cualquier estado global del SDK (p.
+    ej. el tracer provider, que solo se puede fijar una vez por proceso)
+    queda en una situación menos predecible de lo necesario. Ver
+    ``test_no_agrega_x_trace_id_sin_otel_habilitado``."""
+    app = FastAPI()
+    yield app
+    FastAPIInstrumentor().uninstrument_app(app)
+
+
+def test_setup_telemetry_deshabilitado_no_hace_nada():
+    app = FastAPI()
+    telemetry = setup_telemetry(app, _settings(otel_enabled=False))
+
+    assert telemetry is None
+    shutdown_telemetry(telemetry)  # no debe lanzar con None
+
+
+def test_setup_telemetry_habilitado_instrumenta_la_app(_app_instrumentada):
+    telemetry = setup_telemetry(_app_instrumentada, _settings(otel_enabled=True))
+
+    try:
+        assert telemetry is not None
+        tracer_provider, meter_provider, logger_provider = telemetry
+        assert tracer_provider is not None
+        assert meter_provider is not None
+        assert logger_provider is not None
+    finally:
+        shutdown_telemetry(telemetry)
+
+
+def test_setup_telemetry_habilita_propagacion_de_logs_de_uvicorn(_app_instrumentada):
+    for logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+        logging.getLogger(logger_name).propagate = False
+
+    telemetry = setup_telemetry(_app_instrumentada, _settings(otel_enabled=True))
+
+    try:
+        for logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+            assert logging.getLogger(logger_name).propagate is True
+    finally:
+        shutdown_telemetry(telemetry)
+
+
+def test_agrega_x_trace_id_cuando_hay_un_span_activo(_app_instrumentada):
+    app = _app_instrumentada
+    telemetry = setup_telemetry(app, _settings(otel_enabled=True))
+    agregar_encabezado_trace_id(app)
+
+    @app.get("/ping")
+    async def ping():
+        return {"ok": True}
+
+    try:
+        resp = TestClient(app).get("/ping")
+        assert "X-Trace-Id" in resp.headers
+        trace_id = resp.headers["X-Trace-Id"]
+        assert len(trace_id) == 32
+        int(trace_id, 16)  # es hexadecimal válido
+    finally:
+        shutdown_telemetry(telemetry)
+
+
+def test_no_agrega_x_trace_id_sin_otel_habilitado():
+    app = FastAPI()
+    telemetry = setup_telemetry(app, _settings(otel_enabled=False))
+    agregar_encabezado_trace_id(app)
+
+    @app.get("/ping")
+    async def ping():
+        return {"ok": True}
+
+    resp = TestClient(app).get("/ping")
+
+    assert "X-Trace-Id" not in resp.headers
+    shutdown_telemetry(telemetry)
+
+
+def _handler_de_prueba() -> logging.Handler:
+    handler = logging.NullHandler()
+    handler.addFilter(_AtributosDeTraza())
+    handler.setFormatter(logging.Formatter("%(message)s trace_id=%(trace_id)s span_id=%(span_id)s"))
+    return handler
+
+
+def _registro(mensaje: str) -> logging.LogRecord:
+    return logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg=mensaje,
+        args=None,
+        exc_info=None,
+    )
+
+
+def test_el_texto_del_log_trae_trace_id_y_span_id_sin_span_activo():
+    handler = _handler_de_prueba()
+    record = _registro("cliente creado")
+
+    handler.filter(record)
+    texto = handler.format(record)
+
+    assert texto == "cliente creado trace_id=- span_id=-"
+
+
+def test_el_texto_del_log_trae_trace_id_y_span_id_reales_con_span_activo(_app_instrumentada):
+    telemetry = setup_telemetry(_app_instrumentada, _settings(otel_enabled=True))
+    handler = _handler_de_prueba()
+    record = _registro("cliente creado")
+
+    try:
+        tracer_provider, _, _ = telemetry
+        with tracer_provider.get_tracer(__name__).start_as_current_span("span-de-prueba"):
+            handler.filter(record)
+            texto = handler.format(record)
+    finally:
+        shutdown_telemetry(telemetry)
+
+    assert texto.startswith("cliente creado trace_id=")
+    resto, span_parte = texto.rsplit(" span_id=", 1)
+    trace_id = resto.removeprefix("cliente creado trace_id=")
+    span_id = span_parte
+    assert len(trace_id) == 32
+    assert len(span_id) == 16
+    int(trace_id, 16)
+    int(span_id, 16)
+
+
+def test_get_attributes_quita_code_line_number_y_recorta_code_file_path():
+    record = _registro("cliente creado")
+    record.pathname = "/app/app/adapters/sqlite.py"
+    record.funcName = "crear"
+    record.lineno = 130
+
+    atributos = _OtelLoggingHandler._get_attributes(record)
+
+    assert code_attributes.CODE_LINE_NUMBER not in atributos
+    assert atributos[code_attributes.CODE_FILE_PATH] == "sqlite.py"
+    assert atributos[code_attributes.CODE_FUNCTION_NAME] == "crear"
