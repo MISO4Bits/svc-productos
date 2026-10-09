@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from app.domain import DocumentoLegal, Mercado, TipoDocumentoLegal
+from app.domain import (
+    DocumentoLegal,
+    Mercado,
+    PlantillaCorreo,
+    TipoDocumentoLegal,
+    TipoPlantillaCorreo,
+)
 
 
 @runtime_checkable
@@ -21,3 +27,17 @@ class DocumentoLegalRepository(Protocol):
     async def obtener_version(
         self, mercado: Mercado, idioma: str, tipo: TipoDocumentoLegal, version: int
     ) -> DocumentoLegal | None: ...
+
+
+@runtime_checkable
+class PlantillaCorreoRepository(Protocol):
+    async def publicar(self, plantilla: PlantillaCorreo) -> bool:
+        """Inserta una versión nueva. Idempotente: si ya existe esa versión devuelve
+        ``False`` sin tocarla (una plantilla publicada nunca se modifica)."""
+        ...
+
+    async def obtener_vigente(
+        self, mercado: Mercado, idioma: str, tipo: TipoPlantillaCorreo
+    ) -> PlantillaCorreo | None:
+        """La versión más alta del tipo para el mercado e idioma."""
+        ...

@@ -1,0 +1,11 @@
+Te damos la bienvenida, {{nombre}}
+
+Tu cuenta en Solventa ya está creada. Inicia sesión en la web o en la app de Solventa para cotizar y contratar el seguro de vida de tu crédito hipotecario.
+
+Lo que sigue
+
+- Cotiza tu seguro: elige tu banco, traemos los datos de tu crédito y ves cuánto cuesta al mes.
+- Confirma tu correo: te enviamos un mensaje aparte. Confirmarlo es necesario para contratar.
+- Lleva tu seguro en el celular: entra a la app con el mismo correo y contraseña.
+
+Si no creaste una cuenta en Solventa, ignora este correo.

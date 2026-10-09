@@ -5,15 +5,21 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
 
-from app.api.schemas import PATRON_IDIOMA, PATRON_VERSION, DocumentoLegalOut
+from app.api.schemas import (
+    PATRON_IDIOMA,
+    PATRON_VERSION,
+    DocumentoLegalOut,
+    PlantillaCorreoOut,
+)
 from app.domain import (
     IDIOMA_POR_DEFECTO,
     DocumentoLegalNoEncontrado,
     Mercado,
     TipoDocumentoLegal,
+    TipoPlantillaCorreo,
     parsear_version,
 )
-from app.services import DocumentosLegalesService
+from app.services import DocumentosLegalesService, PlantillasCorreoService
 
 logger = logging.getLogger("svc_productos.api")
 router = APIRouter()
@@ -26,7 +32,12 @@ def get_service(request: Request) -> DocumentosLegalesService:
     return request.app.state.service
 
 
+def get_plantillas(request: Request) -> PlantillasCorreoService:
+    return request.app.state.plantillas
+
+
 ServiceDep = Annotated[DocumentosLegalesService, Depends(get_service)]
+PlantillasDep = Annotated[PlantillasCorreoService, Depends(get_plantillas)]
 MercadoQuery = Annotated[Mercado, Query()]
 IdiomaQuery = Annotated[str, Query(pattern=PATRON_IDIOMA)]
 
@@ -73,3 +84,19 @@ async def obtener_version_documento(
     documento = await service.obtener_version(mercado, idioma, tipo, numero)
     response.headers["Cache-Control"] = CACHE_VERSION_INMUTABLE
     return DocumentoLegalOut.desde_dominio(documento)
+
+
+@router.get(
+    "/plantillas-correo/{tipo}",
+    response_model=PlantillaCorreoOut,
+    tags=["Plantillas de correo"],
+)
+async def obtener_plantilla_correo_vigente(
+    tipo: TipoPlantillaCorreo,
+    service: PlantillasDep,
+    mercado: MercadoQuery,
+    idioma: IdiomaQuery = IDIOMA_POR_DEFECTO,
+) -> PlantillaCorreoOut:
+    logger.info("GET /plantillas-correo/%s: solicitud recibida mercado=%s", tipo, mercado)
+    plantilla = await service.obtener_vigente(mercado, idioma, tipo)
+    return PlantillaCorreoOut.desde_dominio(plantilla)

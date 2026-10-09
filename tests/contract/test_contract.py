@@ -29,7 +29,7 @@ def _app_operations(app) -> set[tuple[str, str]]:
     return {
         (method.upper(), path)
         for path, item in app.openapi()["paths"].items()
-        if path.startswith("/documentos-legales")
+        if path.startswith(("/documentos-legales", "/plantillas-correo"))
         for method in item
         if method.lower() in _METODOS
     }
@@ -69,6 +69,17 @@ async def test_respuestas_cumplen_el_esquema(client, openapi_spec):
         version = await client.get(f"/documentos-legales/{tipo}/versiones/V1", params=PARAMS)
         assert version.status_code == 200
         _assert_valid(openapi_spec, "DocumentoLegal", version.json())
+
+
+async def test_plantillas_de_correo_cumplen_el_esquema(client, openapi_spec):
+    for tipo in ("bienvenida", "verificacion-correo"):
+        respuesta = await client.get(f"/plantillas-correo/{tipo}", params=PARAMS)
+        assert respuesta.status_code == 200
+        _assert_valid(openapi_spec, "PlantillaCorreo", respuesta.json())
+
+    no_existe = await client.get("/plantillas-correo/inexistente", params=PARAMS)
+    assert no_existe.status_code == 400
+    _assert_valid(openapi_spec, "Problema", no_existe.json())
 
 
 async def test_errores_cumplen_problem_details(client, openapi_spec):
