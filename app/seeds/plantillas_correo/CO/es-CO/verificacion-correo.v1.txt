@@ -1,7 +1,9 @@
-Hola {{nombre}},
+Confirma tu correo
 
-Para terminar, confirma que este correo es tuyo abriendo este enlace:
+Tu cuenta ya está creada. Confirma tu correo para poder contratar tu seguro. Puedes cotizar desde ya.
+
+Para confirmarlo, abre este enlace en tu navegador:
 
 {{enlaceVerificacion}}
 
-Si no creaste una cuenta en Solventa, ignora este mensaje. (c) {{anio}} Solventa.
+Si no creaste una cuenta en Solventa, ignora este correo.

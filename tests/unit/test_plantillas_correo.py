@@ -225,7 +225,7 @@ async def test_semillas_reales_cargan_las_dos_plantillas_de_es_co(service):
     bienvenida = await service.obtener_vigente(CO, ES, BIENVENIDA)
     verificacion = await service.obtener_vigente(CO, ES, VERIFICACION)
     assert bienvenida.asunto == "Te damos la bienvenida a Solventa"
-    assert verificacion.asunto == "Confirma tu correo en Solventa"
+    assert verificacion.asunto == "Confirma tu correo"
     assert "{{enlaceVerificacion}}" in verificacion.cuerpo_html
     assert "<title>" in bienvenida.cuerpo_html
     assert {bienvenida.creado_por, verificacion.creado_por} == {"seed-inicial"}
