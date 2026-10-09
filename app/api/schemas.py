@@ -5,7 +5,12 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from app.domain import DocumentoLegal, TipoDocumentoLegal
+from app.domain import (
+    DocumentoLegal,
+    PlantillaCorreo,
+    TipoDocumentoLegal,
+    TipoPlantillaCorreo,
+)
 
 PATRON_VERSION = r"^V[1-9][0-9]*$"
 PATRON_IDIOMA = r"^[a-z]{2}-[A-Z]{2}$"
@@ -39,4 +44,22 @@ class DocumentoLegalOut(_Model):
             base_legal=documento.base_legal,
             contenido=documento.contenido,
             nota_pie=documento.nota_pie,
+        )
+
+
+class PlantillaCorreoOut(_Model):
+    tipo: TipoPlantillaCorreo
+    version: str
+    asunto: str
+    cuerpo_html: str
+    cuerpo_texto: str
+
+    @classmethod
+    def desde_dominio(cls, plantilla: PlantillaCorreo) -> PlantillaCorreoOut:
+        return cls(
+            tipo=plantilla.tipo,
+            version=plantilla.version_etiqueta,
+            asunto=plantilla.asunto,
+            cuerpo_html=plantilla.cuerpo_html,
+            cuerpo_texto=plantilla.cuerpo_texto,
         )

@@ -34,6 +34,8 @@ servers:
 tags:
   - name: Documentos legales
     description: Textos legales versionados por mercado e idioma.
+  - name: Plantillas de correo
+    description: Asunto y cuerpo de los correos que Solventa envía, por mercado e idioma.
 
 security:
   - serviceAuth: []
@@ -91,6 +93,37 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DocumentoLegal' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /plantillas-correo/{tipo}:
+    get:
+      operationId: obtenerPlantillaCorreoVigente
+      tags: [Plantillas de correo]
+      summary: Versión vigente de una plantilla de correo
+      description: |
+        **Interno**: lo consume CoreTransaccional dentro del clúster para armar los
+        correos del registro; no se publica hacia el canal web. Devuelve la versión
+        más alta del tipo para el mercado e idioma, con el asunto y los dos cuerpos
+        (HTML y texto plano) tal cual se publicaron, **sin rellenar**: las variables
+        `{{nombre}}` las sustituye quien consume la plantilla.
+
+        Variables por tipo:
+        - `bienvenida`: `nombre`, `urlWeb`, `anio`.
+        - `verificacion-correo`: `nombre`, `enlaceVerificacion` (obligatoria), `anio`.
+      parameters:
+        - name: tipo
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/TipoPlantillaCorreo' }
+        - $ref: '#/components/parameters/Mercado'
+        - $ref: '#/components/parameters/Idioma'
+      responses:
+        '200':
+          description: Versión vigente de la plantilla.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlantillaCorreo' }
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
 
@@ -176,6 +209,31 @@ components:
         notaPie:
           type: string
           description: Texto de pie del documento. Se omite cuando no tiene.
+
+    TipoPlantillaCorreo:
+      type: string
+      enum: [bienvenida, verificacion-correo]
+      description: |
+        - `bienvenida` — correo que recibe quien acaba de crear su cuenta.
+        - `verificacion-correo` — correo con el enlace para confirmar el correo.
+
+    PlantillaCorreo:
+      type: object
+      additionalProperties: false
+      required: [tipo, version, asunto, cuerpoHtml, cuerpoTexto]
+      properties:
+        tipo: { $ref: '#/components/schemas/TipoPlantillaCorreo' }
+        version: { $ref: '#/components/schemas/Version' }
+        asunto:
+          type: string
+          description: Asunto del correo; puede traer variables.
+          examples: ['Te damos la bienvenida a Solventa, {{nombre}}']
+        cuerpoHtml:
+          type: string
+          description: Cuerpo en HTML, sin rellenar. No incluye `script`, `iframe`, `object` ni `embed`.
+        cuerpoTexto:
+          type: string
+          description: Cuerpo en texto plano (alternativa para clientes de correo sin HTML), sin rellenar.
 
     Problema:
       description: Error en formato RFC 9457 (Problem Details for HTTP APIs).

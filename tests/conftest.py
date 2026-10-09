@@ -34,6 +34,7 @@ async def app(settings):
     application = create_app(settings)
     await maybe_init(application.state.documentos)
     await application.state.service.cargar_semillas(settings.seed_autor)
+    await application.state.plantillas.cargar_semillas(settings.seed_autor)
     return application
 
 

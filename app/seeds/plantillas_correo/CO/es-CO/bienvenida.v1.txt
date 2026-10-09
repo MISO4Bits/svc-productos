@@ -1,0 +1,7 @@
+Hola {{nombre}},
+
+Tu cuenta quedó creada. Ya puedes ingresar los datos de tu crédito para conocer tu cotización.
+
+Ir a Solventa: {{urlWeb}}
+
+Recibes este correo porque creaste una cuenta en Solventa. (c) {{anio}} Solventa.

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirma tu correo en Solventa</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#ffffff;border-radius:8px;">
+          <tr>
+            <td style="padding:32px 32px 8px 32px;font-size:22px;font-weight:bold;color:#0b3d91;">Solventa</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px;font-size:16px;line-height:24px;">
+              <p style="margin:0 0 16px 0;">Hola {{nombre}},</p>
+              <p style="margin:0 0 16px 0;">Para terminar, confirma que este correo es tuyo. Solo toma un clic.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:8px 32px 16px 32px;">
+              <a href="{{enlaceVerificacion}}" style="display:inline-block;background-color:#0b3d91;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:16px;">Confirmar mi correo</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 24px 32px;font-size:13px;line-height:20px;color:#6b7280;">
+              Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+              <span style="word-break:break-all;">{{enlaceVerificacion}}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px 32px;font-size:12px;line-height:18px;color:#6b7280;border-top:1px solid #e5e7eb;">
+              Si no creaste una cuenta en Solventa, ignora este mensaje. &copy; {{anio}} Solventa.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

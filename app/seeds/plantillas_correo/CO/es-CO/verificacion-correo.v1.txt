@@ -1,0 +1,7 @@
+Hola {{nombre}},
+
+Para terminar, confirma que este correo es tuyo abriendo este enlace:
+
+{{enlaceVerificacion}}
+
+Si no creaste una cuenta en Solventa, ignora este mensaje. (c) {{anio}} Solventa.

@@ -1,8 +1,9 @@
-"""Modelo de dominio de documentos legales.
+"""Modelo de dominio de documentos legales y plantillas de correo.
 
 Sin dependencias de framework: entidades, enums, validación del contenido y
-errores de negocio. Un documento publicado es inmutable: cambiarlo implica
-crear una versión nueva (otro registro), nunca modificar la existente.
+errores de negocio. Un documento o una plantilla publicados son inmutables:
+cambiarlos implica crear una versión nueva (otro registro), nunca modificar la
+existente.
 """
 
 from __future__ import annotations
@@ -153,6 +154,90 @@ class DocumentoLegal:
         if self.version < 1:
             raise DomainError("La versión debe ser mayor o igual a 1")
         validar_contenido(self.contenido)
+
+    @property
+    def version_etiqueta(self) -> str:
+        return formatear_version(self.version)
+
+
+# --- plantillas de correo ---
+
+
+class TipoPlantillaCorreo(StrEnum):
+    BIENVENIDA = "bienvenida"
+    VERIFICACION_CORREO = "verificacion-correo"
+
+
+# Variables que cada plantilla puede usar: ``{{nombre}}``. Quien la rellena
+# (CoreTransaccional) solo conoce estas; una desconocida es un error de tipeo.
+VARIABLES_PLANTILLA: dict[TipoPlantillaCorreo, frozenset[str]] = {
+    TipoPlantillaCorreo.BIENVENIDA: frozenset({"nombre", "urlWeb", "anio"}),
+    TipoPlantillaCorreo.VERIFICACION_CORREO: frozenset({"nombre", "enlaceVerificacion", "anio"}),
+}
+# Sin esta variable el correo no sirve (la verificación sin enlace).
+VARIABLES_REQUERIDAS: dict[TipoPlantillaCorreo, frozenset[str]] = {
+    TipoPlantillaCorreo.BIENVENIDA: frozenset(),
+    TipoPlantillaCorreo.VERIFICACION_CORREO: frozenset({"enlaceVerificacion"}),
+}
+
+_MARCADOR = re.compile(r"\{\{(\w+)\}\}")
+_ETIQUETAS_PROHIBIDAS = re.compile(r"<\s*(script|iframe|object|embed)\b", re.IGNORECASE)
+
+
+class PlantillaCorreoNoEncontrada(DomainError):
+    def __init__(self, tipo: str) -> None:
+        super().__init__(f"Plantilla de correo {tipo} no encontrada")
+        self.tipo = tipo
+
+
+class PlantillaInvalida(DomainError):
+    """El asunto o el cuerpo de una plantilla de correo no cumple las reglas."""
+
+
+def variables_usadas(texto: str) -> set[str]:
+    return set(_MARCADOR.findall(texto))
+
+
+def validar_plantilla(
+    tipo: TipoPlantillaCorreo, asunto: str, cuerpo_html: str, cuerpo_texto: str
+) -> None:
+    """Lanza ``PlantillaInvalida`` si hay marcadores mal formados o desconocidos,
+    falta una variable requerida o el HTML trae etiquetas activas."""
+    partes = {"asunto": asunto, "cuerpo HTML": cuerpo_html, "cuerpo de texto": cuerpo_texto}
+    for nombre, texto in partes.items():
+        if not texto.strip():
+            raise PlantillaInvalida(f"El {nombre} no puede estar vacío")
+        sobrante = _MARCADOR.sub("", texto)
+        if "{{" in sobrante or "}}" in sobrante:
+            raise PlantillaInvalida(f"El {nombre} tiene un marcador mal formado")
+    desconocidas = set().union(*(variables_usadas(t) for t in partes.values()))
+    desconocidas -= VARIABLES_PLANTILLA[tipo]
+    if desconocidas:
+        raise PlantillaInvalida(f"Variables desconocidas para {tipo}: {sorted(desconocidas)}")
+    for requerida in VARIABLES_REQUERIDAS[tipo]:
+        for nombre, texto in (("cuerpo HTML", cuerpo_html), ("cuerpo de texto", cuerpo_texto)):
+            if requerida not in variables_usadas(texto):
+                raise PlantillaInvalida(f"El {nombre} debe usar la variable {requerida}")
+    if _ETIQUETAS_PROHIBIDAS.search(cuerpo_html):
+        raise PlantillaInvalida("El cuerpo HTML no puede incluir script, iframe, object ni embed")
+
+
+@dataclass(frozen=True)
+class PlantillaCorreo:
+    mercado: Mercado
+    idioma: str
+    tipo: TipoPlantillaCorreo
+    version: int
+    asunto: str
+    cuerpo_html: str
+    cuerpo_texto: str
+    creado_por: str
+    creado_en: datetime = field(default_factory=now_utc)
+
+    def __post_init__(self) -> None:
+        if self.version < 1:
+            raise DomainError("La versión debe ser mayor o igual a 1")
+        validar_plantilla(self.tipo, self.asunto, self.cuerpo_html, self.cuerpo_texto)
 
     @property
     def version_etiqueta(self) -> str:

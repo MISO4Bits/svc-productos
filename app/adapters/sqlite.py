@@ -16,7 +16,14 @@ from datetime import datetime
 
 import aiosqlite
 
-from app.domain import ORDEN_TIPOS, DocumentoLegal, Mercado, TipoDocumentoLegal
+from app.domain import (
+    ORDEN_TIPOS,
+    DocumentoLegal,
+    Mercado,
+    PlantillaCorreo,
+    TipoDocumentoLegal,
+    TipoPlantillaCorreo,
+)
 
 logger = logging.getLogger("svc_productos.adapters.sqlite")
 
@@ -44,6 +51,28 @@ CREATE TRIGGER IF NOT EXISTS documento_legal_version_sin_delete
 BEFORE DELETE ON documento_legal_version
 BEGIN
     SELECT RAISE(ABORT, 'documento_legal_version es inmutable: no se borra');
+END;
+CREATE TABLE IF NOT EXISTS plantilla_correo_version (
+    mercado TEXT NOT NULL,
+    idioma TEXT NOT NULL,
+    tipo TEXT NOT NULL CHECK (tipo IN ('bienvenida', 'verificacion-correo')),
+    version INTEGER NOT NULL CHECK (version >= 1),
+    asunto TEXT NOT NULL,
+    cuerpo_html TEXT NOT NULL,
+    cuerpo_texto TEXT NOT NULL,
+    creado_en TEXT NOT NULL,
+    creado_por TEXT NOT NULL,
+    PRIMARY KEY (mercado, idioma, tipo, version)
+);
+CREATE TRIGGER IF NOT EXISTS plantilla_correo_version_sin_update
+BEFORE UPDATE ON plantilla_correo_version
+BEGIN
+    SELECT RAISE(ABORT, 'plantilla_correo_version es inmutable: publica una version nueva');
+END;
+CREATE TRIGGER IF NOT EXISTS plantilla_correo_version_sin_delete
+BEFORE DELETE ON plantilla_correo_version
+BEGIN
+    SELECT RAISE(ABORT, 'plantilla_correo_version es inmutable: no se borra');
 END;
 """
 
@@ -151,3 +180,68 @@ class SqliteDocumentoLegalRepository:
             )
             row = await cursor.fetchone()
         return _a_documento(row) if row else None
+
+
+def _a_plantilla(row: aiosqlite.Row) -> PlantillaCorreo:
+    return PlantillaCorreo(
+        mercado=Mercado(row["mercado"]),
+        idioma=row["idioma"],
+        tipo=TipoPlantillaCorreo(row["tipo"]),
+        version=row["version"],
+        asunto=row["asunto"],
+        cuerpo_html=row["cuerpo_html"],
+        cuerpo_texto=row["cuerpo_texto"],
+        creado_en=datetime.fromisoformat(row["creado_en"]),
+        creado_por=row["creado_por"],
+    )
+
+
+class SqlitePlantillaCorreoRepository:
+    def __init__(self, db: SqliteDatabase) -> None:
+        self._db = db
+
+    async def publicar(self, plantilla: PlantillaCorreo) -> bool:
+        async with self._db.connect() as conn:
+            cursor = await conn.execute(
+                """
+                INSERT OR IGNORE INTO plantilla_correo_version (
+                    mercado, idioma, tipo, version, asunto, cuerpo_html, cuerpo_texto,
+                    creado_en, creado_por
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(plantilla.mercado),
+                    plantilla.idioma,
+                    str(plantilla.tipo),
+                    plantilla.version,
+                    plantilla.asunto,
+                    plantilla.cuerpo_html,
+                    plantilla.cuerpo_texto,
+                    plantilla.creado_en.isoformat(),
+                    plantilla.creado_por,
+                ),
+            )
+            await conn.commit()
+            insertada = cursor.rowcount == 1
+        if insertada:
+            logger.info(
+                "sqlite: plantilla de correo publicada tipo=%s version=%s",
+                plantilla.tipo,
+                plantilla.version_etiqueta,
+            )
+        return insertada
+
+    async def obtener_vigente(
+        self, mercado: Mercado, idioma: str, tipo: TipoPlantillaCorreo
+    ) -> PlantillaCorreo | None:
+        async with self._db.connect() as conn:
+            cursor = await conn.execute(
+                """
+                SELECT * FROM plantilla_correo_version
+                WHERE mercado = ? AND idioma = ? AND tipo = ?
+                ORDER BY version DESC LIMIT 1
+                """,
+                (str(mercado), idioma, str(tipo)),
+            )
+            row = await cursor.fetchone()
+        return _a_plantilla(row) if row else None

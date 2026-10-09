@@ -34,7 +34,7 @@ dev = [
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["seeds/*.json"]
+app = ["seeds/*.json", "seeds/plantillas_correo/*/*/*.*"]
 
 [tool.ruff]
 target-version = "py312"

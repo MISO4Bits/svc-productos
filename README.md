@@ -17,6 +17,24 @@ tratamiento de datos personales y consulta en centrales de riesgo). Contrato:
   publicada no tiene efecto.
 - La aceptación del cliente no vive aquí: la registra CoreTransaccional.
 
+## Plantillas de correo
+
+También guarda las **plantillas de los correos** (`bienvenida` y `verificacion-correo`) por
+mercado e idioma, con el mismo esquema inmutable y versionado. Las consume CoreTransaccional
+(`GET /plantillas-correo/{tipo}?mercado=CO&idioma=es-CO`, interno, sin rellenar); Core las rellena
+y las manda a la función `fn-notificaciones`.
+
+Los textos viven en `app/seeds/plantillas_correo/<mercado>/<idioma>/` y se cargan al arrancar:
+
+- `<tipo>.v<N>.html` — el **asunto** es el `<title>` del HTML — y su par `<tipo>.v<N>.txt`
+  (versión de texto plano).
+- Variables con la forma `{{nombre}}`. `bienvenida`: `nombre`, `urlWeb`, `anio`.
+  `verificacion-correo`: `nombre`, `enlaceVerificacion` (obligatoria), `anio`. Una variable
+  desconocida o un marcador mal formado detiene el arranque.
+- **Para reemplazar una plantilla**: sobrescribe los archivos de la versión actual. Surte efecto
+  cuando la base está vacía (hoy, en cada arranque del pod). Para publicarla sobre una base que ya
+  la tiene, agrega `<tipo>.v2.html` y `<tipo>.v2.txt`: la versión vigente es la más alta.
+
 ## Correr el servicio en local
 
 Requiere Python 3.12+.
