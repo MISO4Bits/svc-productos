@@ -1,37 +1,89 @@
 <!doctype html>
-<html lang="es-CO">
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Te damos la bienvenida a Solventa, {{nombre}}</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Te damos la bienvenida a Solventa</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  BITS-315. Correo de bienvenida al crear la cuenta (BITS-93, AC-2).
+  Variable a reemplazar al enviar: {{nombre}}, el primer nombre del cliente.
+  Sin botón a propósito: un enlace abriría el navegador del celular aunque el cliente tenga la app.
+  HTML para correo: tablas y estilos en línea. Gmail ignora las fuentes web: el logo va como imagen
+  y el texto cae a Arial donde Plus Jakarta Sans no carga.
+  Colores de Figma y tipografía de la escala del Design System (M3), con referencia de layout en pantallas "04 · Confirma tu correo" y "04A · Correo confirmado".
+-->
 </head>
-<body style="margin:0;padding:0;background-color:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7;padding:24px 0;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#ffffff;border-radius:8px;">
-          <tr>
-            <td style="padding:32px 32px 8px 32px;font-size:22px;font-weight:bold;color:#0b3d91;">Solventa</td>
-          </tr>
-          <tr>
-            <td style="padding:8px 32px;font-size:16px;line-height:24px;">
-              <p style="margin:0 0 16px 0;">Hola {{nombre}},</p>
-              <p style="margin:0 0 16px 0;">Tu cuenta quedó creada. Ya puedes ingresar los datos de tu crédito para conocer tu cotización.</p>
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding:8px 32px 24px 32px;">
-              <a href="{{urlWeb}}" style="display:inline-block;background-color:#0b3d91;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:16px;">Ir a Solventa</a>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:16px 32px 32px 32px;font-size:12px;line-height:18px;color:#6b7280;border-top:1px solid #e5e7eb;">
-              Recibes este correo porque creaste una cuenta en Solventa. &copy; {{anio}} Solventa.
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="margin:0;padding:0;background-color:#F5FAFB;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5FAFB;">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+        <tr>
+          <td style="padding:0 8px 24px 8px;">
+            <img src="https://raw.githubusercontent.com/MISO4Bits/fe-mobile/develop/app/src/main/res/drawable-nodpi/logo_solventa.png" width="128" height="32" alt="Solventa" style="display:block;border:0;font-family:'Dancing Script',cursive;font-size:30px;font-weight:700;color:#006971;">
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color:#FFFFFF;border:1px solid #DDE4E5;border-radius:20px;padding:32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:500;color:#161D1D;">
+                  Te damos la bienvenida, {{nombre}}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top:12px;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:16px;line-height:24px;letter-spacing:0.5px;color:#3F484A;">
+                  Tu cuenta en Solventa ya está creada. Inicia sesión en la web o en la app de Solventa para cotizar y contratar el seguro de vida de tu crédito hipotecario.
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top:28px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="border-top:1px solid #DDE4E5;font-size:0;line-height:0;">&nbsp;</td></tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top:20px;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:22px;line-height:28px;font-weight:500;color:#161D1D;">
+                  Lo que sigue
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top:16px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td valign="top" style="padding:6px 12px 0 0;"><div style="width:8px;height:8px;border-radius:4px;background-color:#006971;"></div></td>
+                      <td style="padding-bottom:12px;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;letter-spacing:0.25px;color:#3F484A;">
+                        <span style="font-weight:600;letter-spacing:0.1px;color:#161D1D;">Cotiza tu seguro</span><br>Elige tu banco, traemos los datos de tu crédito y ves cuánto cuesta al mes.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td valign="top" style="padding:6px 12px 0 0;"><div style="width:8px;height:8px;border-radius:4px;background-color:#006971;"></div></td>
+                      <td style="padding-bottom:12px;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;letter-spacing:0.25px;color:#3F484A;">
+                        <span style="font-weight:600;letter-spacing:0.1px;color:#161D1D;">Confirma tu correo</span><br>Te enviamos un mensaje aparte. Confirmarlo es necesario para contratar.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td valign="top" style="padding:6px 12px 0 0;"><div style="width:8px;height:8px;border-radius:4px;background-color:#006971;"></div></td>
+                      <td style="font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;letter-spacing:0.25px;color:#3F484A;">
+                        <span style="font-weight:600;letter-spacing:0.1px;color:#161D1D;">Lleva tu seguro en el celular</span><br>Entra a la app con el mismo correo y contraseña.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 8px 0 8px;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:0.4px;color:#6F797A;">
+            Si no creaste una cuenta en Solventa, ignora este correo.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>

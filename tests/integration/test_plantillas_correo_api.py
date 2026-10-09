@@ -13,9 +13,9 @@ async def test_obtiene_la_plantilla_de_bienvenida(client):
     cuerpo = resp.json()
     assert cuerpo["tipo"] == "bienvenida"
     assert cuerpo["version"] == "V1"
-    assert cuerpo["asunto"] == "Te damos la bienvenida a Solventa, {{nombre}}"
+    assert cuerpo["asunto"] == "Te damos la bienvenida a Solventa"
     assert "{{nombre}}" in cuerpo["cuerpoHtml"]
-    assert "{{urlWeb}}" in cuerpo["cuerpoTexto"]
+    assert "{{nombre}}" in cuerpo["cuerpoTexto"]
 
 
 async def test_obtiene_la_plantilla_de_verificacion_con_el_enlace(client):
