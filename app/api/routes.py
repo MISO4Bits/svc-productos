@@ -9,6 +9,7 @@ from app.api.schemas import (
     PATRON_IDIOMA,
     PATRON_VERSION,
     DocumentoLegalOut,
+    EntidadFinancieraOut,
     PlantillaCorreoOut,
 )
 from app.domain import (
@@ -19,13 +20,19 @@ from app.domain import (
     TipoPlantillaCorreo,
     parsear_version,
 )
-from app.services import DocumentosLegalesService, PlantillasCorreoService
+from app.services import (
+    DocumentosLegalesService,
+    EntidadesFinancierasService,
+    PlantillasCorreoService,
+)
 
 logger = logging.getLogger("svc_productos.api")
 router = APIRouter()
 
 # Una versión publicada nunca cambia: se puede cachear indefinidamente.
 CACHE_VERSION_INMUTABLE = "public, max-age=31536000, immutable"
+# La lista de entidades es configuración que casi no cambia: una hora basta.
+CACHE_ENTIDADES = "public, max-age=3600"
 
 
 def get_service(request: Request) -> DocumentosLegalesService:
@@ -36,7 +43,12 @@ def get_plantillas(request: Request) -> PlantillasCorreoService:
     return request.app.state.plantillas
 
 
+def get_entidades(request: Request) -> EntidadesFinancierasService:
+    return request.app.state.entidades
+
+
 ServiceDep = Annotated[DocumentosLegalesService, Depends(get_service)]
+EntidadesDep = Annotated[EntidadesFinancierasService, Depends(get_entidades)]
 PlantillasDep = Annotated[PlantillasCorreoService, Depends(get_plantillas)]
 MercadoQuery = Annotated[Mercado, Query()]
 IdiomaQuery = Annotated[str, Query(pattern=PATRON_IDIOMA)]
@@ -100,3 +112,17 @@ async def obtener_plantilla_correo_vigente(
     logger.info("GET /plantillas-correo/%s: solicitud recibida mercado=%s", tipo, mercado)
     plantilla = await service.obtener_vigente(mercado, idioma, tipo)
     return PlantillaCorreoOut.desde_dominio(plantilla)
+
+
+@router.get(
+    "/entidades-financieras",
+    response_model=list[EntidadFinancieraOut],
+    tags=["Entidades financieras"],
+)
+async def listar_entidades_financieras(
+    service: EntidadesDep, response: Response, mercado: MercadoQuery
+) -> list[EntidadFinancieraOut]:
+    logger.info("GET /entidades-financieras: solicitud recibida mercado=%s", mercado)
+    entidades = await service.listar(mercado)
+    response.headers["Cache-Control"] = CACHE_ENTIDADES
+    return [EntidadFinancieraOut.desde_dominio(e) for e in entidades]

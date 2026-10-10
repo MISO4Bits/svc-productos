@@ -7,6 +7,7 @@ from pydantic.alias_generators import to_camel
 
 from app.domain import (
     DocumentoLegal,
+    EntidadFinanciera,
     PlantillaCorreo,
     TipoDocumentoLegal,
     TipoPlantillaCorreo,
@@ -63,3 +64,13 @@ class PlantillaCorreoOut(_Model):
             cuerpo_html=plantilla.cuerpo_html,
             cuerpo_texto=plantilla.cuerpo_texto,
         )
+
+
+class EntidadFinancieraOut(_Model):
+    id: str
+    nombre: str
+    alias: list[str]
+
+    @classmethod
+    def desde_dominio(cls, entidad: EntidadFinanciera) -> EntidadFinancieraOut:
+        return cls(id=entidad.id, nombre=entidad.nombre, alias=list(entidad.alias))

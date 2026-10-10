@@ -6,6 +6,7 @@ from typing import Protocol, runtime_checkable
 
 from app.domain import (
     DocumentoLegal,
+    EntidadFinanciera,
     Mercado,
     PlantillaCorreo,
     TipoDocumentoLegal,
@@ -40,4 +41,15 @@ class PlantillaCorreoRepository(Protocol):
         self, mercado: Mercado, idioma: str, tipo: TipoPlantillaCorreo
     ) -> PlantillaCorreo | None:
         """La versión más alta del tipo para el mercado e idioma."""
+        ...
+
+
+@runtime_checkable
+class EntidadFinancieraRepository(Protocol):
+    async def guardar(self, entidad: EntidadFinanciera) -> None:
+        """Inserta la entidad o reemplaza la que tenga el mismo mercado e id."""
+        ...
+
+    async def listar(self, mercado: Mercado) -> list[EntidadFinanciera]:
+        """Las entidades del mercado, ordenadas por ``orden``."""
         ...

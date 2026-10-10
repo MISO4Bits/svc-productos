@@ -160,6 +160,29 @@ class DocumentoLegal:
         return formatear_version(self.version)
 
 
+# --- entidades financieras del mercado ---
+
+
+@dataclass(frozen=True)
+class EntidadFinanciera:
+    """Banco o entidad que el cliente puede elegir como acreedora de su crédito.
+
+    ``alias`` son los nombres con los que las fuentes (Open Finance) reportan a la
+    entidad, para reconocerla en lo que traen. Es configuración del mercado: a
+    diferencia de un documento legal, se puede corregir sin versionar.
+    """
+
+    mercado: Mercado
+    id: str
+    nombre: str
+    orden: int
+    alias: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.id.strip() or not self.nombre.strip():
+            raise DomainError("La entidad necesita un id y un nombre")
+
+
 # --- plantillas de correo ---
 
 
