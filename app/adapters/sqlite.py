@@ -10,6 +10,7 @@ publica como una versión nueva (otra fila).
 
 from __future__ import annotations
 
+import json
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -19,6 +20,7 @@ import aiosqlite
 from app.domain import (
     ORDEN_TIPOS,
     DocumentoLegal,
+    EntidadFinanciera,
     Mercado,
     PlantillaCorreo,
     TipoDocumentoLegal,
@@ -74,6 +76,14 @@ BEFORE DELETE ON plantilla_correo_version
 BEGIN
     SELECT RAISE(ABORT, 'plantilla_correo_version es inmutable: no se borra');
 END;
+CREATE TABLE IF NOT EXISTS entidad_financiera (
+    mercado TEXT NOT NULL,
+    id TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    alias TEXT NOT NULL,
+    orden INTEGER NOT NULL,
+    PRIMARY KEY (mercado, id)
+);
 """
 
 
@@ -245,3 +255,44 @@ class SqlitePlantillaCorreoRepository:
             )
             row = await cursor.fetchone()
         return _a_plantilla(row) if row else None
+
+
+class SqliteEntidadFinancieraRepository:
+    def __init__(self, db: SqliteDatabase) -> None:
+        self._db = db
+
+    async def guardar(self, entidad: EntidadFinanciera) -> None:
+        async with self._db.connect() as conn:
+            await conn.execute(
+                """
+                INSERT INTO entidad_financiera (mercado, id, nombre, alias, orden)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (mercado, id) DO UPDATE SET
+                    nombre = excluded.nombre, alias = excluded.alias, orden = excluded.orden
+                """,
+                (
+                    str(entidad.mercado),
+                    entidad.id,
+                    entidad.nombre,
+                    json.dumps(list(entidad.alias)),
+                    entidad.orden,
+                ),
+            )
+            await conn.commit()
+
+    async def listar(self, mercado: Mercado) -> list[EntidadFinanciera]:
+        async with self._db.connect() as conn:
+            cursor = await conn.execute(
+                "SELECT * FROM entidad_financiera WHERE mercado = ? ORDER BY orden", (str(mercado),)
+            )
+            rows = await cursor.fetchall()
+        return [
+            EntidadFinanciera(
+                mercado=Mercado(r["mercado"]),
+                id=r["id"],
+                nombre=r["nombre"],
+                orden=r["orden"],
+                alias=tuple(json.loads(r["alias"])),
+            )
+            for r in rows
+        ]

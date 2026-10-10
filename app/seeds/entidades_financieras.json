@@ -1,0 +1,6 @@
+[
+  { "mercado": "CO", "id": "bancolombia", "nombre": "Bancolombia", "alias": ["BANCOLOMBIA S.A."], "orden": 1 },
+  { "mercado": "CO", "id": "davivienda", "nombre": "Davivienda", "alias": ["DAVIVIENDA S.A."], "orden": 2 },
+  { "mercado": "CO", "id": "banco-de-bogota", "nombre": "Banco de Bogotá", "alias": ["BANCO DE BOGOTÁ S.A."], "orden": 3 },
+  { "mercado": "CO", "id": "bbva-colombia", "nombre": "BBVA Colombia", "alias": ["BBVA COLOMBIA S.A."], "orden": 4 }
+]

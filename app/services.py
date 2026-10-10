@@ -11,6 +11,7 @@ from pathlib import Path
 from app.domain import (
     DocumentoLegal,
     DocumentoLegalNoEncontrado,
+    EntidadFinanciera,
     Mercado,
     PlantillaCorreo,
     PlantillaCorreoNoEncontrada,
@@ -19,11 +20,16 @@ from app.domain import (
     TipoPlantillaCorreo,
     formatear_version,
 )
-from app.ports import DocumentoLegalRepository, PlantillaCorreoRepository
+from app.ports import (
+    DocumentoLegalRepository,
+    EntidadFinancieraRepository,
+    PlantillaCorreoRepository,
+)
 
 logger = logging.getLogger("svc_productos.documentos_legales")
 
 SEEDS_PATH = Path(__file__).resolve().parent / "seeds" / "documentos_legales.json"
+SEEDS_ENTIDADES_PATH = Path(__file__).resolve().parent / "seeds" / "entidades_financieras.json"
 SEEDS_PLANTILLAS_PATH = Path(__file__).resolve().parent / "seeds" / "plantillas_correo"
 
 _ARCHIVO_PLANTILLA = re.compile(r"^(?P<tipo>[a-z-]+)\.v(?P<version>[1-9][0-9]*)\.html$")
@@ -130,3 +136,31 @@ class PlantillasCorreoService:
                 nuevas += 1
         logger.info("carga inicial de plantillas: %s versiones nuevas de %s", nuevas, len(archivos))
         return nuevas
+
+
+class EntidadesFinancierasService:
+    def __init__(self, entidades: EntidadFinancieraRepository) -> None:
+        self._entidades = entidades
+
+    async def listar(self, mercado: Mercado) -> list[EntidadFinanciera]:
+        return await self._entidades.listar(mercado)
+
+    async def cargar_semillas(self, ruta: Path = SEEDS_ENTIDADES_PATH) -> int:
+        """Aplica las entidades de ``ruta``: inserta las nuevas y actualiza las que cambiaron.
+
+        Es configuración de mercado, no un texto publicado: corregir un nombre o un alias
+        en el archivo se refleja en el siguiente arranque. No borra las que ya no estén.
+        """
+        entradas = json.loads(ruta.read_text(encoding="utf-8"))
+        for entrada in entradas:
+            await self._entidades.guardar(
+                EntidadFinanciera(
+                    mercado=Mercado(entrada["mercado"]),
+                    id=entrada["id"],
+                    nombre=entrada["nombre"],
+                    orden=entrada["orden"],
+                    alias=tuple(entrada.get("alias", ())),
+                )
+            )
+        logger.info("carga inicial: %s entidades financieras", len(entradas))
+        return len(entradas)

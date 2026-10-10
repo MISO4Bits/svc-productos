@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.domain import (
     ORDEN_TIPOS,
     DocumentoLegal,
+    EntidadFinanciera,
     Mercado,
     PlantillaCorreo,
     TipoDocumentoLegal,
@@ -58,3 +59,16 @@ class InMemoryPlantillaCorreoRepository:
             if (m, i, t) == (mercado, idioma, tipo)
         ]
         return max(candidatas, key=lambda p: p.version, default=None)
+
+
+class InMemoryEntidadFinancieraRepository:
+    def __init__(self) -> None:
+        self._por_clave: dict[tuple[Mercado, str], EntidadFinanciera] = {}
+
+    async def guardar(self, entidad: EntidadFinanciera) -> None:
+        self._por_clave[(entidad.mercado, entidad.id)] = entidad
+
+    async def listar(self, mercado: Mercado) -> list[EntidadFinanciera]:
+        return sorted(
+            (e for (m, _), e in self._por_clave.items() if m == mercado), key=lambda e: e.orden
+        )

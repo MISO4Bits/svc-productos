@@ -4,15 +4,21 @@ from __future__ import annotations
 
 from app.adapters.memory import (
     InMemoryDocumentoLegalRepository,
+    InMemoryEntidadFinancieraRepository,
     InMemoryPlantillaCorreoRepository,
 )
 from app.adapters.sqlite import (
     SqliteDatabase,
     SqliteDocumentoLegalRepository,
+    SqliteEntidadFinancieraRepository,
     SqlitePlantillaCorreoRepository,
 )
 from app.config import Settings
-from app.ports import DocumentoLegalRepository, PlantillaCorreoRepository
+from app.ports import (
+    DocumentoLegalRepository,
+    EntidadFinancieraRepository,
+    PlantillaCorreoRepository,
+)
 
 
 def build_repositorio(settings: Settings) -> DocumentoLegalRepository:
@@ -28,6 +34,14 @@ def build_repositorio_plantillas(settings: Settings) -> PlantillaCorreoRepositor
         return InMemoryPlantillaCorreoRepository()
     if settings.repository_backend == "sqlite":
         return SqlitePlantillaCorreoRepository(SqliteDatabase(settings.database_path))
+    raise ValueError(f"repository_backend no soportado: {settings.repository_backend}")
+
+
+def build_repositorio_entidades(settings: Settings) -> EntidadFinancieraRepository:
+    if settings.repository_backend == "memory":
+        return InMemoryEntidadFinancieraRepository()
+    if settings.repository_backend == "sqlite":
+        return SqliteEntidadFinancieraRepository(SqliteDatabase(settings.database_path))
     raise ValueError(f"repository_backend no soportado: {settings.repository_backend}")
 
 

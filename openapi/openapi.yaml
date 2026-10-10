@@ -36,6 +36,8 @@ tags:
     description: Textos legales versionados por mercado e idioma.
   - name: Plantillas de correo
     description: Asunto y cuerpo de los correos que Solventa envía, por mercado e idioma.
+  - name: Entidades financieras
+    description: Bancos y entidades que el cliente puede elegir como acreedoras de su crédito.
 
 security:
   - serviceAuth: []
@@ -127,6 +129,32 @@ paths:
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
 
+  /entidades-financieras:
+    get:
+      operationId: listarEntidadesFinancieras
+      tags: [Entidades financieras]
+      summary: Entidades financieras del mercado
+      description: |
+        Lista de bancos y entidades del mercado, en el orden en que se presentan. Es la
+        lista que ve el cliente cuando no hay datos de su crédito traídos de Open Finance,
+        y sirve para reconocer a la entidad acreedora de lo que trae la fuente: `alias` son
+        los nombres con los que las fuentes reportan a la entidad (p. ej. `BANCOLOMBIA S.A.`).
+        Casi no cambia, así que se puede cachear una hora.
+      parameters:
+        - $ref: '#/components/parameters/Mercado'
+      responses:
+        '200':
+          description: Entidades del mercado.
+          headers:
+            Cache-Control:
+              schema: { type: string, examples: ['public, max-age=3600'] }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EntidadFinanciera' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+
 components:
   securitySchemes:
     serviceAuth:
@@ -209,6 +237,25 @@ components:
         notaPie:
           type: string
           description: Texto de pie del documento. Se omite cuando no tiene.
+
+    EntidadFinanciera:
+      type: object
+      additionalProperties: false
+      required: [id, nombre, alias]
+      properties:
+        id:
+          type: string
+          description: Identificador estable de la entidad.
+          examples: [bancolombia]
+        nombre:
+          type: string
+          description: Nombre que se muestra al cliente.
+          examples: [Bancolombia]
+        alias:
+          type: array
+          items: { type: string }
+          description: Nombres con los que las fuentes reportan a la entidad.
+          examples: [['BANCOLOMBIA S.A.']]
 
     TipoPlantillaCorreo:
       type: string

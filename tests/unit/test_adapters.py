@@ -7,10 +7,23 @@ import pytest
 import pytest_asyncio
 
 from app.adapters.factory import build_repositorio, maybe_init
-from app.adapters.memory import InMemoryDocumentoLegalRepository
-from app.adapters.sqlite import SqliteDatabase, SqliteDocumentoLegalRepository
+from app.adapters.memory import (
+    InMemoryDocumentoLegalRepository,
+    InMemoryEntidadFinancieraRepository,
+)
+from app.adapters.sqlite import (
+    SqliteDatabase,
+    SqliteDocumentoLegalRepository,
+    SqliteEntidadFinancieraRepository,
+)
 from app.config import Settings
-from app.domain import DocumentoLegal, Mercado, TipoDocumentoLegal
+from app.domain import (
+    DocumentoLegal,
+    DomainError,
+    EntidadFinanciera,
+    Mercado,
+    TipoDocumentoLegal,
+)
 from app.ports import DocumentoLegalRepository
 
 CO = Mercado.CO
@@ -196,3 +209,30 @@ def test_fabrica_rechaza_un_backend_desconocido():
 
 async def test_maybe_init_ignora_adaptadores_sin_base_de_datos():
     await maybe_init(InMemoryDocumentoLegalRepository())
+
+
+@pytest_asyncio.fixture(params=["memoria", "sqlite"])
+async def repo_entidades(request, tmp_path):
+    if request.param == "memoria":
+        return InMemoryEntidadFinancieraRepository()
+    db = SqliteDatabase(str(tmp_path / "entidades.db"))
+    await db.init()
+    return SqliteEntidadFinancieraRepository(db)
+
+
+async def test_entidades_se_guardan_ordenadas_y_se_reemplazan_por_id(repo_entidades):
+    await repo_entidades.guardar(EntidadFinanciera(CO, "b", "Banco B", 2, ("B S.A.",)))
+    await repo_entidades.guardar(EntidadFinanciera(CO, "a", "Banco A", 1))
+    await repo_entidades.guardar(EntidadFinanciera(CO, "b", "Banco B2", 3, ("B2",)))
+
+    entidades = await repo_entidades.listar(CO)
+
+    assert [(e.id, e.nombre, e.alias) for e in entidades] == [
+        ("a", "Banco A", ()),
+        ("b", "Banco B2", ("B2",)),
+    ]
+
+
+def test_una_entidad_necesita_id_y_nombre():
+    with pytest.raises(DomainError):
+        EntidadFinanciera(CO, " ", "Banco", 1)

@@ -29,7 +29,7 @@ def _app_operations(app) -> set[tuple[str, str]]:
     return {
         (method.upper(), path)
         for path, item in app.openapi()["paths"].items()
-        if path.startswith(("/documentos-legales", "/plantillas-correo"))
+        if path.startswith(("/documentos-legales", "/plantillas-correo", "/entidades-financieras"))
         for method in item
         if method.lower() in _METODOS
     }
@@ -110,3 +110,16 @@ async def test_el_contenido_de_las_semillas_cumple_la_lista_blanca_del_contrato(
 async def test_expone_el_contrato(client):
     resp = await client.get("/openapi.yaml")
     assert resp.status_code == 200
+
+
+async def test_entidades_financieras_cumplen_el_esquema(client, openapi_spec):
+    respuesta = await client.get("/entidades-financieras", params={"mercado": "CO"})
+    assert respuesta.status_code == 200
+    assert respuesta.headers["cache-control"] == "public, max-age=3600"
+    assert len(respuesta.json()) == 4
+    for entidad in respuesta.json():
+        _assert_valid(openapi_spec, "EntidadFinanciera", entidad)
+
+    invalida = await client.get("/entidades-financieras")
+    assert invalida.status_code == 400
+    _assert_valid(openapi_spec, "Problema", invalida.json())
