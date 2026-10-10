@@ -28,6 +28,10 @@ SEEDS_PLANTILLAS_PATH = Path(__file__).resolve().parent / "seeds" / "plantillas_
 
 _ARCHIVO_PLANTILLA = re.compile(r"^(?P<tipo>[a-z-]+)\.v(?P<version>[1-9][0-9]*)\.html$")
 _TITULO = re.compile(r"<title>(?P<asunto>.*?)</title>", re.IGNORECASE | re.DOTALL)
+# Comentarios HTML (notas internas del equipo): no deben viajar en el correo, donde cualquier
+# destinatario los puede leer con "ver código fuente". Se conservan los comentarios
+# condicionales de Outlook (``<!--[if mso]> ... <![endif]-->``), que sí cumplen una función.
+_COMENTARIO = re.compile(r"<!--(?!\[if |<!\[endif\]).*?-->\s*", re.DOTALL)
 
 
 class DocumentosLegalesService:
@@ -102,7 +106,7 @@ class PlantillasCorreoService:
             texto = archivo.with_suffix(".txt")
             if not texto.exists():
                 raise PlantillaInvalida(f"Falta la versión de texto de {archivo.name}")
-            cuerpo_html = archivo.read_text(encoding="utf-8")
+            cuerpo_html = _COMENTARIO.sub("", archivo.read_text(encoding="utf-8"))
             titulo = _TITULO.search(cuerpo_html)
             if titulo is None:
                 raise PlantillaInvalida(f"{archivo.name} no tiene <title> (es el asunto)")

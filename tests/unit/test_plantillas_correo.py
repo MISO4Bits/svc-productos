@@ -282,3 +282,50 @@ async def test_una_semilla_invalida_detiene_la_carga(
     _escribir(tmp_path / "CO" / "es-CO", nombre, html, texto)
     with pytest.raises(PlantillaInvalida, match=mensaje):
         await service.cargar_semillas("seed", tmp_path)
+
+
+async def test_los_comentarios_html_no_llegan_a_la_plantilla_publicada(service, tmp_path):
+    carpeta = tmp_path / "CO" / "es-CO"
+    html = (
+        "<!doctype html><html><head><title>Hola</title>\n"
+        "<!--\n  BITS-315. Nota interna con {{nombre}} y rutas de Figma.\n-->\n"
+        "</head><body><!-- otra nota --><p>{{nombre}}</p></body></html>"
+    )
+    _escribir(carpeta, "bienvenida.v1", html)
+
+    await service.cargar_semillas("seed", tmp_path)
+
+    publicada = await service.obtener_vigente(CO, ES, BIENVENIDA)
+    assert "<!--" not in publicada.cuerpo_html
+    assert "BITS-315" not in publicada.cuerpo_html
+    assert "otra nota" not in publicada.cuerpo_html
+    assert publicada.asunto == "Hola"
+    assert "<p>{{nombre}}</p>" in publicada.cuerpo_html
+
+
+async def test_los_comentarios_condicionales_de_outlook_se_conservan(service, tmp_path):
+    carpeta = tmp_path / "CO" / "es-CO"
+    html = (
+        "<html><head><title>Hola</title></head><body>"
+        "<!--[if mso]><table><tr><td><![endif]-->"
+        "<p>{{nombre}}</p>"
+        "<!--[if mso]></td></tr></table><![endif]-->"
+        "<!--<![endif]-->"
+        "<!-- nota interna -->"
+        "</body></html>"
+    )
+    _escribir(carpeta, "bienvenida.v1", html)
+
+    await service.cargar_semillas("seed", tmp_path)
+
+    publicada = await service.obtener_vigente(CO, ES, BIENVENIDA)
+    assert publicada.cuerpo_html.count("<!--[if mso]>") == 2
+    assert "<!--<![endif]-->" in publicada.cuerpo_html
+    assert "nota interna" not in publicada.cuerpo_html
+
+
+async def test_las_semillas_reales_no_publican_comentarios(service):
+    await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH)
+
+    for tipo in (BIENVENIDA, VERIFICACION):
+        assert "<!--" not in (await service.obtener_vigente(CO, ES, tipo)).cuerpo_html

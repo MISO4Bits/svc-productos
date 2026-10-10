@@ -28,6 +28,9 @@ Los textos viven en `app/seeds/plantillas_correo/<mercado>/<idioma>/` y se carga
 
 - `<tipo>.v<N>.html` — el **asunto** es el `<title>` del HTML — y su par `<tipo>.v<N>.txt`
   (versión de texto plano).
+- Los comentarios HTML (`<!-- ... -->`) se eliminan al cargar la plantilla: sirven de notas internas
+  en el repositorio y no viajan en el correo. Los condicionales de Outlook (`<!--[if mso]>`) se
+  conservan.
 - Variables con la forma `{{nombre}}`. `bienvenida`: `nombre`, `urlWeb`, `anio`.
   `verificacion-correo`: `nombre`, `enlaceVerificacion` (obligatoria), `anio`. Una variable
   desconocida o un marcador mal formado detiene el arranque.
