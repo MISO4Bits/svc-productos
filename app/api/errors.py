@@ -8,7 +8,12 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.domain import DocumentoLegalNoEncontrado, DomainError, PlantillaCorreoNoEncontrada
+from app.domain import (
+    DocumentoLegalNoEncontrado,
+    DomainError,
+    PlantillaCorreoNoEncontrada,
+    TarifaNoEncontrada,
+)
 from app.logging_utils import sanear_para_log
 
 logger = logging.getLogger("svc_productos.api")
@@ -52,6 +57,10 @@ def install_error_handlers(app: FastAPI) -> None:
         return problema(
             404, "Plantilla de correo no encontrada", detail=str(exc), instance=str(request.url)
         )
+
+    @app.exception_handler(TarifaNoEncontrada)
+    async def _tarifa_no_encontrada(request: Request, exc: TarifaNoEncontrada) -> JSONResponse:
+        return problema(404, "Tarifa no encontrada", detail=str(exc), instance=str(request.url))
 
     @app.exception_handler(DomainError)
     async def _regla_negocio(request: Request, exc: DomainError) -> JSONResponse:

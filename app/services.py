@@ -6,16 +6,20 @@ import html
 import json
 import logging
 import re
+from decimal import Decimal
 from pathlib import Path
 
 from app.domain import (
     DocumentoLegal,
     DocumentoLegalNoEncontrado,
     EntidadFinanciera,
+    FranjaTarifa,
     Mercado,
     PlantillaCorreo,
     PlantillaCorreoNoEncontrada,
     PlantillaInvalida,
+    TarifaNoEncontrada,
+    TarifaVidaHipotecario,
     TipoDocumentoLegal,
     TipoPlantillaCorreo,
     formatear_version,
@@ -31,6 +35,7 @@ logger = logging.getLogger("svc_productos.documentos_legales")
 SEEDS_PATH = Path(__file__).resolve().parent / "seeds" / "documentos_legales.json"
 SEEDS_ENTIDADES_PATH = Path(__file__).resolve().parent / "seeds" / "entidades_financieras.json"
 SEEDS_PLANTILLAS_PATH = Path(__file__).resolve().parent / "seeds" / "plantillas_correo"
+SEEDS_TARIFAS_PATH = Path(__file__).resolve().parent / "seeds" / "tarifas_vida_hipotecario.json"
 
 _ARCHIVO_PLANTILLA = re.compile(r"^(?P<tipo>[a-z-]+)\.v(?P<version>[1-9][0-9]*)\.html$")
 _TITULO = re.compile(r"<title>(?P<asunto>.*?)</title>", re.IGNORECASE | re.DOTALL)
@@ -164,3 +169,40 @@ class EntidadesFinancierasService:
             )
         logger.info("carga inicial: %s entidades financieras", len(entradas))
         return len(entradas)
+
+
+class TarifasService:
+    """Tarifa del seguro de vida hipotecario, cargada de una semilla al arrancar.
+
+    No se edita por API: cambiarla es editar el archivo (subiendo su ``version``) y
+    desplegar. Vive en memoria; no hay nada que persistir.
+    """
+
+    def __init__(self) -> None:
+        self._tarifas: dict[Mercado, TarifaVidaHipotecario] = {}
+
+    async def obtener(self, mercado: Mercado) -> TarifaVidaHipotecario:
+        tarifa = self._tarifas.get(mercado)
+        if tarifa is None:
+            raise TarifaNoEncontrada(str(mercado))
+        return tarifa
+
+    async def cargar_semillas(self, ruta: Path = SEEDS_TARIFAS_PATH) -> int:
+        """Carga la tarifa de ``ruta``. Una tarifa inválida detiene el arranque."""
+        entrada = json.loads(ruta.read_text(encoding="utf-8"), parse_float=Decimal)
+        tarifa = TarifaVidaHipotecario(
+            mercado=Mercado(entrada["mercado"]),
+            version=entrada["version"],
+            franjas=tuple(
+                FranjaTarifa(f["edadDesde"], f["edadHasta"], f["tasaMensualPorMil"])
+                for f in entrada["franjas"]
+            ),
+        )
+        self._tarifas[tarifa.mercado] = tarifa
+        logger.info(
+            "carga inicial de tarifa: mercado=%s version=%s franjas=%s",
+            tarifa.mercado,
+            tarifa.version,
+            len(tarifa.franjas),
+        )
+        return 1

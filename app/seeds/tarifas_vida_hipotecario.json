@@ -1,0 +1,15 @@
+{
+  "mercado": "CO",
+  "version": 1,
+  "franjas": [
+    { "edadDesde": 18, "edadHasta": 24, "tasaMensualPorMil": 0.062 },
+    { "edadDesde": 25, "edadHasta": 29, "tasaMensualPorMil": 0.095 },
+    { "edadDesde": 30, "edadHasta": 34, "tasaMensualPorMil": 0.137 },
+    { "edadDesde": 35, "edadHasta": 39, "tasaMensualPorMil": 0.196 },
+    { "edadDesde": 40, "edadHasta": 44, "tasaMensualPorMil": 0.281 },
+    { "edadDesde": 45, "edadHasta": 49, "tasaMensualPorMil": 0.402 },
+    { "edadDesde": 50, "edadHasta": 54, "tasaMensualPorMil": 0.576 },
+    { "edadDesde": 55, "edadHasta": 59, "tasaMensualPorMil": 0.826 },
+    { "edadDesde": 60, "edadHasta": 65, "tasaMensualPorMil": 1.184 }
+  ]
+}
