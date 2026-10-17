@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 from enum import StrEnum
 from html.parser import HTMLParser
 
@@ -265,3 +266,50 @@ class PlantillaCorreo:
     @property
     def version_etiqueta(self) -> str:
         return formatear_version(self.version)
+
+
+# --- tarifa del seguro de vida deudor hipotecario ---
+
+
+class TarifaNoEncontrada(DomainError):
+    def __init__(self, mercado: str) -> None:
+        super().__init__(f"No hay tarifa de vida hipotecario para el mercado {mercado}")
+        self.mercado = mercado
+
+
+@dataclass(frozen=True)
+class FranjaTarifa:
+    """Tasa mensual por cada $1.000 de saldo para las edades ``edad_desde``–``edad_hasta``."""
+
+    edad_desde: int
+    edad_hasta: int
+    tasa_mensual_por_mil: Decimal
+
+    def __post_init__(self) -> None:
+        if self.edad_desde > self.edad_hasta:
+            raise DomainError(f"Franja con edades invertidas: {self.edad_desde}-{self.edad_hasta}")
+        if self.tasa_mensual_por_mil <= 0:
+            raise DomainError("La tasa de una franja debe ser positiva")
+
+
+@dataclass(frozen=True)
+class TarifaVidaHipotecario:
+    """Tabla de tasas por edad del producto. Es configuración del mercado: se carga de una
+    semilla y trae un número de versión para que cada cotización registre con cuál se calculó.
+    """
+
+    mercado: Mercado
+    version: int
+    franjas: tuple[FranjaTarifa, ...]
+
+    def __post_init__(self) -> None:
+        if self.version < 1:
+            raise DomainError("La versión de la tarifa debe ser 1 o mayor")
+        if not self.franjas:
+            raise DomainError("La tarifa necesita al menos una franja")
+        for anterior, siguiente in zip(self.franjas, self.franjas[1:], strict=False):
+            if siguiente.edad_desde != anterior.edad_hasta + 1:
+                raise DomainError(
+                    "Las franjas de la tarifa deben ser contiguas y estar en orden de edad: "
+                    f"{anterior.edad_hasta} → {siguiente.edad_desde}"
+                )

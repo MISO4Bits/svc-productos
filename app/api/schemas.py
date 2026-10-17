@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 from app.domain import (
     DocumentoLegal,
     EntidadFinanciera,
+    Mercado,
     PlantillaCorreo,
+    TarifaVidaHipotecario,
     TipoDocumentoLegal,
     TipoPlantillaCorreo,
 )
@@ -74,3 +78,31 @@ class EntidadFinancieraOut(_Model):
     @classmethod
     def desde_dominio(cls, entidad: EntidadFinanciera) -> EntidadFinancieraOut:
         return cls(id=entidad.id, nombre=entidad.nombre, alias=list(entidad.alias))
+
+
+class FranjaTarifaOut(_Model):
+    edad_desde: int
+    edad_hasta: int
+    tasa_mensual_por_mil: float
+
+
+class TarifaVidaHipotecarioOut(_Model):
+    mercado: Mercado
+    producto: Literal["VIDA_HIPOTECARIO"] = "VIDA_HIPOTECARIO"
+    version: int
+    franjas: list[FranjaTarifaOut]
+
+    @classmethod
+    def desde_dominio(cls, tarifa: TarifaVidaHipotecario) -> TarifaVidaHipotecarioOut:
+        return cls(
+            mercado=tarifa.mercado,
+            version=tarifa.version,
+            franjas=[
+                FranjaTarifaOut(
+                    edad_desde=f.edad_desde,
+                    edad_hasta=f.edad_hasta,
+                    tasa_mensual_por_mil=float(f.tasa_mensual_por_mil),
+                )
+                for f in tarifa.franjas
+            ],
+        )

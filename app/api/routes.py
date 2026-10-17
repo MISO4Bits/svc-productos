@@ -11,6 +11,7 @@ from app.api.schemas import (
     DocumentoLegalOut,
     EntidadFinancieraOut,
     PlantillaCorreoOut,
+    TarifaVidaHipotecarioOut,
 )
 from app.domain import (
     IDIOMA_POR_DEFECTO,
@@ -24,6 +25,7 @@ from app.services import (
     DocumentosLegalesService,
     EntidadesFinancierasService,
     PlantillasCorreoService,
+    TarifasService,
 )
 
 logger = logging.getLogger("svc_productos.api")
@@ -43,6 +45,10 @@ def get_plantillas(request: Request) -> PlantillasCorreoService:
     return request.app.state.plantillas
 
 
+def get_tarifas(request: Request) -> TarifasService:
+    return request.app.state.tarifas
+
+
 def get_entidades(request: Request) -> EntidadesFinancierasService:
     return request.app.state.entidades
 
@@ -50,6 +56,7 @@ def get_entidades(request: Request) -> EntidadesFinancierasService:
 ServiceDep = Annotated[DocumentosLegalesService, Depends(get_service)]
 EntidadesDep = Annotated[EntidadesFinancierasService, Depends(get_entidades)]
 PlantillasDep = Annotated[PlantillasCorreoService, Depends(get_plantillas)]
+TarifasDep = Annotated[TarifasService, Depends(get_tarifas)]
 MercadoQuery = Annotated[Mercado, Query()]
 IdiomaQuery = Annotated[str, Query(pattern=PATRON_IDIOMA)]
 
@@ -126,3 +133,17 @@ async def listar_entidades_financieras(
     entidades = await service.listar(mercado)
     response.headers["Cache-Control"] = CACHE_ENTIDADES
     return [EntidadFinancieraOut.desde_dominio(e) for e in entidades]
+
+
+@router.get(
+    "/v1/tarifas/vida-hipotecario",
+    response_model=TarifaVidaHipotecarioOut,
+    tags=["Tarifas"],
+)
+async def obtener_tarifa_vida_hipotecario(
+    service: TarifasDep, response: Response, mercado: MercadoQuery
+) -> TarifaVidaHipotecarioOut:
+    logger.info("GET /v1/tarifas/vida-hipotecario: solicitud recibida mercado=%s", mercado)
+    tarifa = await service.obtener(mercado)
+    response.headers["Cache-Control"] = CACHE_ENTIDADES
+    return TarifaVidaHipotecarioOut.desde_dominio(tarifa)

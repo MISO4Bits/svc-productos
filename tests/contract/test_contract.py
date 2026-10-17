@@ -29,7 +29,9 @@ def _app_operations(app) -> set[tuple[str, str]]:
     return {
         (method.upper(), path)
         for path, item in app.openapi()["paths"].items()
-        if path.startswith(("/documentos-legales", "/plantillas-correo", "/entidades-financieras"))
+        if path.startswith(
+            ("/documentos-legales", "/plantillas-correo", "/entidades-financieras", "/v1/tarifas")
+        )
         for method in item
         if method.lower() in _METODOS
     }
@@ -123,3 +125,17 @@ async def test_entidades_financieras_cumplen_el_esquema(client, openapi_spec):
     invalida = await client.get("/entidades-financieras")
     assert invalida.status_code == 400
     _assert_valid(openapi_spec, "Problema", invalida.json())
+
+
+async def test_tarifa_de_vida_hipotecario_cumple_el_esquema(client, openapi_spec):
+    respuesta = await client.get("/v1/tarifas/vida-hipotecario", params={"mercado": "CO"})
+
+    assert respuesta.status_code == 200
+    _assert_valid(openapi_spec, "TarifaVidaHipotecario", respuesta.json())
+
+
+async def test_tarifa_sin_mercado_cumple_problem_details(client, openapi_spec):
+    invalido = await client.get("/v1/tarifas/vida-hipotecario")
+
+    assert invalido.status_code == 400
+    _assert_valid(openapi_spec, "Problema", invalido.json())

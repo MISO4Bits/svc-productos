@@ -2,7 +2,7 @@ openapi: 3.2.0
 
 info:
   title: Productos y Configuración de Mercado
-  summary: Documentos legales versionados que se muestran en el registro.
+  summary: Documentos legales, plantillas de correo, entidades financieras y tarifas del mercado.
   description: |
     API **interna** de Productos y Configuración de Mercado.
 
@@ -36,6 +36,8 @@ tags:
     description: Textos legales versionados por mercado e idioma.
   - name: Plantillas de correo
     description: Asunto y cuerpo de los correos que Solventa envía, por mercado e idioma.
+  - name: Tarifas
+    description: Tabla de tasas por edad del seguro de vida deudor hipotecario.
   - name: Entidades financieras
     description: Bancos y entidades que el cliente puede elegir como acreedoras de su crédito.
 
@@ -154,6 +156,30 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/EntidadFinanciera' }
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
+
+  /v1/tarifas/vida-hipotecario:
+    get:
+      operationId: obtenerTarifaVidaHipotecario
+      tags: [Tarifas]
+      summary: Tabla de tasas por edad del seguro de vida hipotecario
+      description: |
+        Tasa mensual por cada $1.000 de saldo, por franja de edad. La consume Cotización,
+        que la guarda en caché; cada cotización registra la `version` con que se calculó.
+        Se carga de una semilla al arrancar: cambiarla es editar el archivo, subir la
+        `version` y desplegar.
+      parameters:
+        - $ref: '#/components/parameters/Mercado'
+      responses:
+        '200':
+          description: Tarifa vigente del mercado.
+          headers:
+            Cache-Control:
+              schema: { type: string, examples: ['public, max-age=3600'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TarifaVidaHipotecario' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
 
 components:
   securitySchemes:
@@ -281,6 +307,34 @@ components:
         cuerpoTexto:
           type: string
           description: Cuerpo en texto plano (alternativa para clientes de correo sin HTML), sin rellenar.
+
+    TarifaVidaHipotecario:
+      type: object
+      additionalProperties: false
+      required: [mercado, producto, version, franjas]
+      properties:
+        mercado: { $ref: '#/components/schemas/Mercado' }
+        producto: { type: string, const: VIDA_HIPOTECARIO }
+        version:
+          type: integer
+          minimum: 1
+          description: Sube cada vez que cambia la tabla.
+        franjas:
+          type: array
+          minItems: 1
+          description: Contiguas y en orden de edad.
+          items:
+            type: object
+            additionalProperties: false
+            required: [edadDesde, edadHasta, tasaMensualPorMil]
+            properties:
+              edadDesde: { type: integer, examples: [18] }
+              edadHasta: { type: integer, examples: [24] }
+              tasaMensualPorMil:
+                type: number
+                exclusiveMinimum: 0
+                description: Tasa mensual por cada $1.000 de saldo.
+                examples: [0.062]
 
     Problema:
       description: Error en formato RFC 9457 (Problem Details for HTTP APIs).
