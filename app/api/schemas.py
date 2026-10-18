@@ -86,11 +86,18 @@ class FranjaTarifaOut(_Model):
     tasa_mensual_por_mil: float
 
 
+class TarifaHogarOut(_Model):
+    tasa_mensual_por_mil: float
+    suma_asegurada_maxima: float
+    iva: float
+
+
 class TarifaVidaHipotecarioOut(_Model):
     mercado: Mercado
     producto: Literal["VIDA_HIPOTECARIO"] = "VIDA_HIPOTECARIO"
     version: int
     franjas: list[FranjaTarifaOut]
+    hogar: TarifaHogarOut
 
     @classmethod
     def desde_dominio(cls, tarifa: TarifaVidaHipotecario) -> TarifaVidaHipotecarioOut:
@@ -105,4 +112,9 @@ class TarifaVidaHipotecarioOut(_Model):
                 )
                 for f in tarifa.franjas
             ],
+            hogar=TarifaHogarOut(
+                tasa_mensual_por_mil=float(tarifa.hogar.tasa_mensual_por_mil),
+                suma_asegurada_maxima=float(tarifa.hogar.suma_asegurada_maxima),
+                iva=float(tarifa.hogar.iva),
+            ),
         )

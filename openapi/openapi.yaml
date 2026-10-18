@@ -161,12 +161,13 @@ paths:
     get:
       operationId: obtenerTarifaVidaHipotecario
       tags: [Tarifas]
-      summary: Tabla de tasas por edad del seguro de vida hipotecario
+      summary: Tarifa del seguro de vida hipotecario y de su cobertura opcional de Hogar
       description: |
-        Tasa mensual por cada $1.000 de saldo, por franja de edad. La consume Cotización,
-        que la guarda en caché; cada cotización registra la `version` con que se calculó.
-        Se carga de una semilla al arrancar: cambiarla es editar el archivo, subir la
-        `version` y desplegar.
+        Tasa mensual por cada $1.000 de saldo, por franja de edad (Vida), y la tarifa fija de
+        la cobertura opcional de Hogar (`hogar`). Las dos viajan juntas para que Cotización
+        arme una cotización con una sola llamada; la guarda en caché y cada cotización registra
+        la `version` con que se calculó. Se carga de una semilla al arrancar: cambiarla es
+        editar el archivo, subir la `version` y desplegar.
       parameters:
         - $ref: '#/components/parameters/Mercado'
       responses:
@@ -311,14 +312,39 @@ components:
     TarifaVidaHipotecario:
       type: object
       additionalProperties: false
-      required: [mercado, producto, version, franjas]
+      required: [mercado, producto, version, franjas, hogar]
       properties:
         mercado: { $ref: '#/components/schemas/Mercado' }
         producto: { type: string, const: VIDA_HIPOTECARIO }
         version:
           type: integer
           minimum: 1
-          description: Sube cada vez que cambia la tabla.
+          description: Sube cada vez que cambia la tabla de Vida o la tarifa de Hogar.
+        hogar:
+          type: object
+          additionalProperties: false
+          required: [tasaMensualPorMil, sumaAseguradaMaxima, iva]
+          description: |
+            Cobertura opcional de Hogar (incendio y terremoto). La suma asegurada es
+            `min(sumaAseguradaMaxima, valor del crédito)`; el `iva` se suma a su prima y no
+            aplica a Vida.
+          properties:
+            tasaMensualPorMil:
+              type: number
+              exclusiveMinimum: 0
+              description: Tasa mensual por cada $1.000 de suma asegurada, sin impuesto.
+              examples: [0.099]
+            sumaAseguradaMaxima:
+              type: number
+              exclusiveMinimum: 0
+              description: Tope de la suma asegurada, en COP.
+              examples: [240000000]
+            iva:
+              type: number
+              minimum: 0
+              exclusiveMaximum: 1
+              description: Fracción del impuesto sobre el valor agregado (IVA) aplicada a Hogar.
+              examples: [0.19]
         franjas:
           type: array
           minItems: 1

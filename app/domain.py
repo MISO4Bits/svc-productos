@@ -293,14 +293,38 @@ class FranjaTarifa:
 
 
 @dataclass(frozen=True)
+class TarifaHogar:
+    """Cobertura opcional de Hogar (incendio y terremoto): tarifa fija, sin franjas de edad.
+
+    ``tasa_mensual_por_mil`` se aplica por cada $1.000 de suma asegurada, que es
+    ``min(suma_asegurada_maxima, valor del crédito)``. ``iva`` es la fracción del impuesto
+    que se suma a la prima de Hogar (el seguro de vida está excluido).
+    """
+
+    tasa_mensual_por_mil: Decimal
+    suma_asegurada_maxima: Decimal
+    iva: Decimal
+
+    def __post_init__(self) -> None:
+        if self.tasa_mensual_por_mil <= 0:
+            raise DomainError("La tasa de Hogar debe ser positiva")
+        if self.suma_asegurada_maxima <= 0:
+            raise DomainError("La suma asegurada máxima de Hogar debe ser positiva")
+        if not 0 <= self.iva < 1:
+            raise DomainError("El IVA de Hogar debe ser una fracción entre 0 y 1")
+
+
+@dataclass(frozen=True)
 class TarifaVidaHipotecario:
-    """Tabla de tasas por edad del producto. Es configuración del mercado: se carga de una
-    semilla y trae un número de versión para que cada cotización registre con cuál se calculó.
+    """Tarifa del producto: la tabla de tasas por edad de Vida y la tarifa fija de Hogar. Es
+    configuración del mercado: se carga de una semilla y trae un número de versión para que
+    cada cotización registre con cuál se calculó. Cotización la lee en una sola llamada.
     """
 
     mercado: Mercado
     version: int
     franjas: tuple[FranjaTarifa, ...]
+    hogar: TarifaHogar
 
     def __post_init__(self) -> None:
         if self.version < 1:
