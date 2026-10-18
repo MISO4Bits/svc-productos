@@ -1,6 +1,6 @@
 {
   "mercado": "CO",
-  "version": 1,
+  "version": 2,
   "franjas": [
     { "edadDesde": 18, "edadHasta": 24, "tasaMensualPorMil": 0.062 },
     { "edadDesde": 25, "edadHasta": 29, "tasaMensualPorMil": 0.095 },
@@ -11,5 +11,10 @@
     { "edadDesde": 50, "edadHasta": 54, "tasaMensualPorMil": 0.576 },
     { "edadDesde": 55, "edadHasta": 59, "tasaMensualPorMil": 0.826 },
     { "edadDesde": 60, "edadHasta": 65, "tasaMensualPorMil": 1.184 }
-  ]
+  ],
+  "hogar": {
+    "tasaMensualPorMil": 0.099,
+    "sumaAseguradaMaxima": 240000000,
+    "iva": 0.19
+  }
 }

@@ -18,6 +18,7 @@ from app.domain import (
     PlantillaCorreo,
     PlantillaCorreoNoEncontrada,
     PlantillaInvalida,
+    TarifaHogar,
     TarifaNoEncontrada,
     TarifaVidaHipotecario,
     TipoDocumentoLegal,
@@ -196,6 +197,11 @@ class TarifasService:
             franjas=tuple(
                 FranjaTarifa(f["edadDesde"], f["edadHasta"], f["tasaMensualPorMil"])
                 for f in entrada["franjas"]
+            ),
+            hogar=TarifaHogar(
+                tasa_mensual_por_mil=entrada["hogar"]["tasaMensualPorMil"],
+                suma_asegurada_maxima=entrada["hogar"]["sumaAseguradaMaxima"],
+                iva=entrada["hogar"]["iva"],
             ),
         )
         self._tarifas[tarifa.mercado] = tarifa
