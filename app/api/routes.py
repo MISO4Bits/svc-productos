@@ -71,9 +71,10 @@ async def listar_documentos_vigentes(
     service: ServiceDep,
     mercado: MercadoQuery,
     idioma: IdiomaQuery = IDIOMA_POR_DEFECTO,
+    tipo: Annotated[TipoDocumentoLegal | None, Query()] = None,
 ) -> list[DocumentoLegalOut]:
-    logger.info("GET /documentos-legales: solicitud recibida mercado=%s", mercado)
-    documentos = await service.listar_vigentes(mercado, idioma)
+    logger.info("GET /documentos-legales: solicitud recibida mercado=%s tipo=%s", mercado, tipo)
+    documentos = await service.listar_vigentes(mercado, idioma, tipo)
     return [DocumentoLegalOut.desde_dominio(d) for d in documentos]
 
 

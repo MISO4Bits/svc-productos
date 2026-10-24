@@ -219,9 +219,9 @@ async def test_obtener_vigente_inexistente_lanza_no_encontrada(service):
     assert "bienvenida" in str(error.value)
 
 
-async def test_semillas_reales_cargan_las_dos_plantillas_de_es_co(service):
+async def test_semillas_reales_cargan_las_plantillas_de_es_co(service):
     nuevas = await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH)
-    assert nuevas == 2
+    assert nuevas == 3
     bienvenida = await service.obtener_vigente(CO, ES, BIENVENIDA)
     verificacion = await service.obtener_vigente(CO, ES, VERIFICACION)
     assert bienvenida.asunto == "Te damos la bienvenida a Solventa"
@@ -232,7 +232,7 @@ async def test_semillas_reales_cargan_las_dos_plantillas_de_es_co(service):
 
 
 async def test_semillas_son_idempotentes(service):
-    assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 2
+    assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 3
     assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 0
 
 
@@ -327,5 +327,5 @@ async def test_los_comentarios_condicionales_de_outlook_se_conservan(service, tm
 async def test_las_semillas_reales_no_publican_comentarios(service):
     await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH)
 
-    for tipo in (BIENVENIDA, VERIFICACION):
+    for tipo in (BIENVENIDA, VERIFICACION, TipoPlantillaCorreo.POLIZA_EMITIDA):
         assert "<!--" not in (await service.obtener_vigente(CO, ES, tipo)).cuerpo_html
