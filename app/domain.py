@@ -28,9 +28,18 @@ class TipoDocumentoLegal(StrEnum):
     TERMINOS = "terminos"
     OPEN_DATA = "open-data"
     OPEN_FINANCE = "open-finance"
+    # Condiciones de la póliza: se muestran al solicitarla, no en el registro (BITS-101).
+    POLIZA = "poliza"
 
 
-# Orden en que el registro presenta los permisos (el de declaración del enum).
+# Los que presenta el registro: es lo que devuelve el listado cuando no se pide un tipo.
+TIPOS_DE_REGISTRO = (
+    TipoDocumentoLegal.TERMINOS,
+    TipoDocumentoLegal.OPEN_DATA,
+    TipoDocumentoLegal.OPEN_FINANCE,
+)
+
+# Orden en que se presentan los documentos (el de declaración del enum).
 ORDEN_TIPOS = {tipo: posicion for posicion, tipo in enumerate(TipoDocumentoLegal)}
 
 IDIOMA_POR_DEFECTO = "es-CO"

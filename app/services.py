@@ -10,6 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from app.domain import (
+    TIPOS_DE_REGISTRO,
     DocumentoLegal,
     DocumentoLegalNoEncontrado,
     EntidadFinanciera,
@@ -50,8 +51,15 @@ class DocumentosLegalesService:
     def __init__(self, documentos: DocumentoLegalRepository) -> None:
         self._documentos = documentos
 
-    async def listar_vigentes(self, mercado: Mercado, idioma: str) -> list[DocumentoLegal]:
-        return await self._documentos.listar_vigentes(mercado, idioma)
+    async def listar_vigentes(
+        self, mercado: Mercado, idioma: str, tipo: TipoDocumentoLegal | None = None
+    ) -> list[DocumentoLegal]:
+        """Con ``tipo``, solo ese documento; sin él, los del registro (no las condiciones de la
+        póliza, para que la pantalla de registro no las muestre)."""
+        vigentes = await self._documentos.listar_vigentes(mercado, idioma)
+        if tipo is not None:
+            return [d for d in vigentes if d.tipo is tipo]
+        return [d for d in vigentes if d.tipo in TIPOS_DE_REGISTRO]
 
     async def obtener_version(
         self, mercado: Mercado, idioma: str, tipo: TipoDocumentoLegal, version: int

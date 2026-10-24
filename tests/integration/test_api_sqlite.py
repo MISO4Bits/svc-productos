@@ -21,6 +21,30 @@ async def test_lista_los_tres_documentos_vigentes_en_orden_de_presentacion(clien
     ]
 
 
+async def test_el_filtro_tipo_devuelve_las_condiciones_de_la_poliza(client):
+    resp = await client.get("/documentos-legales", params={**PARAMS, "tipo": "poliza"})
+
+    assert resp.status_code == 200
+    documentos = resp.json()
+    assert [(d["tipo"], d["version"]) for d in documentos] == [("poliza", "V1")]
+    assert documentos[0]["titulo"] == "Condiciones de tu póliza"
+    assert documentos[0]["baseLegal"]
+
+
+async def test_las_condiciones_de_la_poliza_tienen_su_version_inmutable(client):
+    resp = await client.get("/documentos-legales/poliza/versiones/V1", params=PARAMS)
+
+    assert resp.status_code == 200
+    assert resp.json()["tipo"] == "poliza"
+    assert "immutable" in resp.headers["cache-control"]
+
+
+async def test_un_tipo_desconocido_en_el_filtro_es_400(client):
+    resp = await client.get("/documentos-legales", params={**PARAMS, "tipo": "otro"})
+
+    assert resp.status_code == 400
+
+
 async def test_cada_documento_trae_todos_los_campos_del_contrato(client):
     documentos = (await client.get("/documentos-legales", params=PARAMS)).json()
     for documento in documentos:
@@ -118,3 +142,47 @@ async def test_con_la_carga_inicial_deshabilitada_arranca_vacio(tmp_path):
     app = create_app(settings)
     async with app.router.lifespan_context(app):
         assert await app.state.service.listar_vigentes("CO", "es-CO") == []
+
+
+async def test_una_base_anterior_al_tipo_poliza_se_migra_sin_perder_lo_publicado(tmp_path):
+    import aiosqlite
+
+    ruta = str(tmp_path / "vieja.db")
+    async with aiosqlite.connect(ruta) as conn:
+        await conn.executescript(
+            """
+            CREATE TABLE documento_legal_version (
+                mercado TEXT NOT NULL,
+                idioma TEXT NOT NULL,
+                tipo TEXT NOT NULL CHECK (tipo IN ('terminos', 'open-data', 'open-finance')),
+                version INTEGER NOT NULL CHECK (version >= 1),
+                titulo TEXT NOT NULL,
+                subtitulo TEXT,
+                base_legal TEXT NOT NULL,
+                contenido TEXT NOT NULL,
+                nota_pie TEXT,
+                creado_en TEXT NOT NULL,
+                creado_por TEXT NOT NULL,
+                PRIMARY KEY (mercado, idioma, tipo, version)
+            );
+            INSERT INTO documento_legal_version VALUES
+                ('CO', 'es-CO', 'terminos', 1, 'Viejo', NULL, 'Ley', '<p>x</p>', NULL,
+                 '2026-10-01T00:00:00+00:00', 'a');
+            """
+        )
+        await conn.commit()
+
+    settings = Settings(repository_backend="sqlite", database_path=ruta, seed_enabled=False)
+    app = create_app(settings)
+    async with app.router.lifespan_context(app):
+        vigentes = await app.state.service.listar_vigentes("CO", "es-CO")
+        assert [(d.tipo, d.titulo) for d in vigentes] == [("terminos", "Viejo")]
+        # ya acepta el tipo nuevo y sigue siendo inmutable
+        async with aiosqlite.connect(ruta) as conn:
+            await conn.execute(
+                "INSERT INTO documento_legal_version VALUES "
+                "('CO', 'es-CO', 'poliza', 1, 'P', NULL, 'Ley', '<p>x</p>', NULL, "
+                "'2026-10-01T00:00:00+00:00', 'a')"
+            )
+            with pytest.raises(aiosqlite.IntegrityError):
+                await conn.execute("UPDATE documento_legal_version SET titulo = 'otro'")

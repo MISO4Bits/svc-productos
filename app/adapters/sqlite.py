@@ -33,7 +33,7 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS documento_legal_version (
     mercado TEXT NOT NULL,
     idioma TEXT NOT NULL,
-    tipo TEXT NOT NULL CHECK (tipo IN ('terminos', 'open-data', 'open-finance')),
+    tipo TEXT NOT NULL CHECK (tipo IN ('terminos', 'open-data', 'open-finance', 'poliza')),
     version INTEGER NOT NULL CHECK (version >= 1),
     titulo TEXT NOT NULL,
     subtitulo TEXT,
@@ -93,8 +93,36 @@ class SqliteDatabase:
 
     async def init(self) -> None:
         async with self.connect() as conn:
+            await self._ampliar_tipos_de_documento(conn)
             await conn.executescript(_SCHEMA)
             await conn.commit()
+
+    @staticmethod
+    async def _ampliar_tipos_de_documento(conn: aiosqlite.Connection) -> None:
+        """Una base creada antes del tipo ``poliza`` tiene un CHECK que lo rechaza y SQLite no
+        permite modificarlo: se reconstruye la tabla conservando lo publicado."""
+        cursor = await conn.execute(
+            "SELECT sql FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'documento_legal_version'"
+        )
+        fila = await cursor.fetchone()
+        if fila is None or "'poliza'" in fila["sql"]:
+            return
+        # Los triggers de inmutabilidad bloquean UPDATE/DELETE; se recrean con el esquema nuevo.
+        await conn.executescript(
+            """
+            DROP TRIGGER IF EXISTS documento_legal_version_sin_update;
+            DROP TRIGGER IF EXISTS documento_legal_version_sin_delete;
+            ALTER TABLE documento_legal_version RENAME TO documento_legal_version_anterior;
+            """
+        )
+        await conn.executescript(_SCHEMA)
+        await conn.executescript(
+            """
+            INSERT INTO documento_legal_version SELECT * FROM documento_legal_version_anterior;
+            DROP TABLE documento_legal_version_anterior;
+            """
+        )
 
     @asynccontextmanager
     async def connect(self):
