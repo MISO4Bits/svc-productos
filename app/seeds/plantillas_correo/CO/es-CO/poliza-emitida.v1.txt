@@ -1,0 +1,11 @@
+Tu póliza está emitida, {{nombre}}
+
+Tu seguro de vida ya está vigente. Va adjunta a este correo la póliza N.º {{numeroPoliza}} en PDF. Guárdala: también puedes verla cuando quieras en la web o en la app de Solventa.
+
+Lo que sigue
+
+- Revisa tu póliza: abre el PDF adjunto y verifica tus datos, las coberturas y el valor que pagas al mes.
+- Tenla a la mano: la encuentras en tu cuenta, en la web y en la app, sin tener que buscar este correo.
+- Si algo no cuadra: responde a este correo y lo revisamos contigo.
+
+Recibes este correo porque contrataste un seguro en Solventa.
