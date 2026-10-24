@@ -31,5 +31,16 @@
     "baseLegal": "Ley 1266 de 2008",
     "contenido": "<h3>1 · Qué autorizas</h3><p>Consultar, reportar, procesar y divulgar la información sobre tu comportamiento crediticio, financiero y comercial ante los operadores de información.</p><h3>2 · A quiénes consultamos</h3><p>DataCrédito Experian y TransUnion, antes CIFIN. Son los dos operadores vigilados en Colombia.</p><h3>3 · Para qué la usamos</h3><p>Para conocer tu historial de pago y ajustar tu precio. Con buen historial lo que pagas al mes puede bajar hasta 14 %.</p><h3>4 · Qué reportamos</h3><p>Si contratas, reportamos el pago de tu póliza. Si te atrasas, el dato negativo permanece el doble del tiempo que estuviste en mora, máximo cuatro años desde el día en que pagues.</p><h3>5 · Antes de reportarte</h3><p>Te avisamos con veinte días de anticipación para que puedas ponerte al día o aclarar lo que no reconozcas.</p><h3>6 · Puedes retirarla</h3><p>Quitas esta autorización cuando quieras desde tu perfil. Tu plan vuelve a la tarifa estándar y tu póliza sigue vigente.</p>",
     "notaPie": "Es opcional. Si no la autorizas puedes seguir igual y calculamos tu cotización solo con los datos que nos diste."
+  },
+  {
+    "mercado": "CO",
+    "idioma": "es-CO",
+    "tipo": "poliza",
+    "version": 1,
+    "titulo": "Condiciones de tu póliza",
+    "subtitulo": "Lo que contratas, en pocas líneas. Léelo antes de solicitar.",
+    "baseLegal": "Código de Comercio (contrato de seguro) y Ley 527 de 1999",
+    "contenido": "<h3>1 · Qué contratas</h3><p>Un seguro de vida deudores asociado a tu crédito de vivienda y, si lo eliges, la cobertura de hogar. La póliza la emite la aseguradora que te indicamos en el documento de tu póliza. Solventa Colombia S.A.S. actúa como intermediario.</p><h3>2 · Qué cubre</h3><ul><li><strong>Vida:</strong> protege el saldo de tu crédito de vivienda que indicaste en tu cotización.</li><li><strong>Hogar (opcional):</strong> incendio y terremoto sobre tu vivienda.</li></ul><h3>3 · Qué no cubre</h3><p>Las exclusiones y límites que fija la aseguradora en su condicionado, que recibirás junto con tu póliza.</p><h3>4 · Tu precio</h3><p>Es el de la cotización que viste al solicitar. No cambia por la revisión de tu solicitud.</p><h3>5 · Lo que declaras</h3><p>Los datos de tu crédito y de tu identidad deben ser verdaderos y completos. Si no lo son, la aseguradora puede rechazar un reclamo o anular la póliza.</p><h3>6 · Revisión de tu solicitud</h3><p>Si no podemos verificar algún dato automáticamente, un agente lo revisa. Mientras tanto tu solicitud queda pendiente y puede tardar. Si no se resuelve antes de que venza tu cotización, tendrás que cotizar de nuevo. Si no podemos verificar tus datos o tu identidad, podemos rechazar la solicitud.</p><h3>7 · Tu firma electrónica</h3><p>Al aceptar desde tu cuenta, esa aceptación vale como tu firma y queda registrada con fecha y hora, según la Ley 527 de 1999.</p><h3>8 · Si algo sale mal</h3><p>Escríbenos a <a href=\"mailto:hola@solventa.co\">hola@solventa.co</a>. También puedes acudir al Defensor del Consumidor Financiero o a la Superintendencia Financiera.</p>",
+    "notaPie": "Solicitar la póliza no te cobra nada todavía. Puedes revisar el documento cuando quieras."
   }
 ]

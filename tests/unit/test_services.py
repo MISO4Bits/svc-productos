@@ -47,9 +47,9 @@ async def test_obtener_version_inexistente_lanza_no_encontrado(service):
     assert "terminos V7" in str(error.value)
 
 
-async def test_semillas_reales_cargan_los_tres_documentos_de_es_co(service):
+async def test_semillas_reales_cargan_los_documentos_de_es_co(service):
     nuevas = await service.cargar_semillas("seed-inicial", SEEDS_PATH)
-    assert nuevas == 3
+    assert nuevas == 4
     vigentes = await service.listar_vigentes(CO, ES)
     assert [(d.tipo, d.version_etiqueta) for d in vigentes] == [
         (TipoDocumentoLegal.TERMINOS, "V1"),
@@ -71,9 +71,27 @@ async def test_semillas_reales_traen_el_contenido_de_figma(service):
 
 
 async def test_cargar_semillas_dos_veces_no_duplica(service):
-    assert await service.cargar_semillas("seed-inicial") == 3
+    assert await service.cargar_semillas("seed-inicial") == 4
     assert await service.cargar_semillas("seed-inicial") == 0
     assert len(await service.listar_vigentes(CO, ES)) == 3
+
+
+async def test_sin_tipo_el_listado_no_incluye_las_condiciones_de_la_poliza(service):
+    await service.cargar_semillas("seed-inicial")
+
+    sin_filtro = await service.listar_vigentes(CO, ES)
+
+    assert TipoDocumentoLegal.POLIZA not in {d.tipo for d in sin_filtro}
+
+
+async def test_con_tipo_el_listado_devuelve_solo_ese_documento(service):
+    await service.cargar_semillas("seed-inicial")
+
+    polizas = await service.listar_vigentes(CO, ES, TipoDocumentoLegal.POLIZA)
+
+    assert [(d.tipo, d.version_etiqueta) for d in polizas] == [(TipoDocumentoLegal.POLIZA, "V1")]
+    assert polizas[0].titulo == "Condiciones de tu póliza"
+    assert "Solventa Colombia S.A.S." in polizas[0].contenido
 
 
 async def test_cargar_semillas_ignora_cambios_en_una_version_ya_publicada(service, tmp_path):

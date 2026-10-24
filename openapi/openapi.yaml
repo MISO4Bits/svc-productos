@@ -55,9 +55,17 @@ paths:
         mercado e idioma indicados, ya con el contenido completo, en el orden en que
         el registro los presenta: `terminos`, `open-data`, `open-finance`. Una sola
         llamada deja listos los tres modales sin más viajes a la red.
+
+        Sin `tipo` devuelve solo los tres del registro. Con `tipo` devuelve ese documento
+        (por ejemplo `poliza`, las condiciones que se muestran al solicitar la póliza); si no
+        hay uno publicado para el mercado e idioma, la lista va vacía.
       parameters:
         - $ref: '#/components/parameters/Mercado'
         - $ref: '#/components/parameters/Idioma'
+        - name: tipo
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/TipoDocumentoLegal' }
       responses:
         '200':
           description: Versión vigente de cada documento del mercado.
@@ -115,6 +123,7 @@ paths:
         Variables por tipo:
         - `bienvenida`: `nombre`, `urlWeb`, `anio`.
         - `verificacion-correo`: `nombre`, `enlaceVerificacion` (obligatoria), `anio`.
+        - `poliza-emitida`: `nombre`, `numeroPoliza` (obligatoria), `urlWeb`, `anio`.
       parameters:
         - name: tipo
           in: path
@@ -227,11 +236,12 @@ components:
 
     TipoDocumentoLegal:
       type: string
-      enum: [terminos, open-data, open-finance]
+      enum: [terminos, open-data, open-finance, poliza]
       description: |
         - `terminos` — términos y condiciones y aviso de privacidad.
         - `open-data` — tratamiento de datos personales.
         - `open-finance` — consulta en centrales de riesgo (datos financieros).
+        - `poliza` — condiciones de la póliza; se muestran al solicitarla, no en el registro.
 
     Version:
       type: string
@@ -286,10 +296,11 @@ components:
 
     TipoPlantillaCorreo:
       type: string
-      enum: [bienvenida, verificacion-correo]
+      enum: [bienvenida, verificacion-correo, poliza-emitida]
       description: |
         - `bienvenida` — correo que recibe quien acaba de crear su cuenta.
         - `verificacion-correo` — correo con el enlace para confirmar el correo.
+        - `poliza-emitida` — correo con la póliza adjunta, al emitirse (BITS-101).
 
     PlantillaCorreo:
       type: object
