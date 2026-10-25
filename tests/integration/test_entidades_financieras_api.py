@@ -15,12 +15,24 @@ async def test_lista_las_entidades_de_colombia_en_el_orden_de_la_pantalla(client
         "davivienda",
         "banco-de-bogota",
         "bbva-colombia",
+        "banco-caja-social",
+        "scotiabank-colpatria",
+        "banco-av-villas",
+        "itau",
+        "banco-de-occidente",
+        "fondo-nacional-del-ahorro",
     ]
     assert [e["nombre"] for e in resp.json()] == [
         "Bancolombia",
         "Davivienda",
         "Banco de Bogotá",
         "BBVA Colombia",
+        "Banco Caja Social",
+        "Scotiabank Colpatria",
+        "Banco AV Villas",
+        "Itaú",
+        "Banco de Occidente",
+        "Fondo Nacional del Ahorro",
     ]
 
 
@@ -28,6 +40,18 @@ async def test_cada_entidad_trae_el_alias_con_que_open_finance_la_reporta(client
     entidades = (await client.get("/entidades-financieras", params={"mercado": "CO"})).json()
 
     assert {e["id"]: e["alias"] for e in entidades}["banco-de-bogota"] == ["BANCO DE BOGOTÁ S.A."]
+
+
+async def test_los_bancos_nuevos_traen_el_nombre_con_que_open_finance_los_reporta(client):
+    entidades = (await client.get("/entidades-financieras", params={"mercado": "CO"})).json()
+
+    alias = {e["id"]: e["alias"] for e in entidades}
+    assert alias["banco-caja-social"] == ["BANCO CAJA SOCIAL S.A."]
+    assert alias["scotiabank-colpatria"] == ["SCOTIABANK COLPATRIA S.A."]
+    assert alias["banco-av-villas"] == ["BANCO COMERCIAL AV VILLAS S.A."]
+    assert alias["itau"] == ["ITAÚ COLOMBIA S.A."]
+    assert alias["banco-de-occidente"] == ["BANCO DE OCCIDENTE S.A."]
+    assert alias["fondo-nacional-del-ahorro"] == ["FONDO NACIONAL DEL AHORRO"]
 
 
 async def test_mercado_desconocido_es_una_solicitud_invalida(client):
@@ -42,7 +66,7 @@ async def test_cargar_las_semillas_otra_vez_no_duplica_nada(tmp_path):
         app = create_app(settings)
         async with app.router.lifespan_context(app):
             entidades = await app.state.entidades.listar("CO")
-            assert len(entidades) == 4
+            assert len(entidades) == 10
 
 
 async def test_corregir_una_entidad_en_el_archivo_se_refleja_al_reiniciar(tmp_path):
