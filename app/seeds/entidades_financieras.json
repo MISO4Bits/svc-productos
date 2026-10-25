@@ -2,5 +2,11 @@
   { "mercado": "CO", "id": "bancolombia", "nombre": "Bancolombia", "alias": ["BANCOLOMBIA S.A."], "orden": 1 },
   { "mercado": "CO", "id": "davivienda", "nombre": "Davivienda", "alias": ["DAVIVIENDA S.A."], "orden": 2 },
   { "mercado": "CO", "id": "banco-de-bogota", "nombre": "Banco de Bogotá", "alias": ["BANCO DE BOGOTÁ S.A."], "orden": 3 },
-  { "mercado": "CO", "id": "bbva-colombia", "nombre": "BBVA Colombia", "alias": ["BBVA COLOMBIA S.A."], "orden": 4 }
+  { "mercado": "CO", "id": "bbva-colombia", "nombre": "BBVA Colombia", "alias": ["BBVA COLOMBIA S.A."], "orden": 4 },
+  { "mercado": "CO", "id": "banco-caja-social", "nombre": "Banco Caja Social", "alias": ["BANCO CAJA SOCIAL S.A."], "orden": 5 },
+  { "mercado": "CO", "id": "scotiabank-colpatria", "nombre": "Scotiabank Colpatria", "alias": ["SCOTIABANK COLPATRIA S.A."], "orden": 6 },
+  { "mercado": "CO", "id": "banco-av-villas", "nombre": "Banco AV Villas", "alias": ["BANCO COMERCIAL AV VILLAS S.A."], "orden": 7 },
+  { "mercado": "CO", "id": "itau", "nombre": "Itaú", "alias": ["ITAÚ COLOMBIA S.A."], "orden": 8 },
+  { "mercado": "CO", "id": "banco-de-occidente", "nombre": "Banco de Occidente", "alias": ["BANCO DE OCCIDENTE S.A."], "orden": 9 },
+  { "mercado": "CO", "id": "fondo-nacional-del-ahorro", "nombre": "Fondo Nacional del Ahorro", "alias": ["FONDO NACIONAL DEL AHORRO"], "orden": 10 }
 ]

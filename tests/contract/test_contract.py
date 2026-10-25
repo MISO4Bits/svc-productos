@@ -118,7 +118,7 @@ async def test_entidades_financieras_cumplen_el_esquema(client, openapi_spec):
     respuesta = await client.get("/entidades-financieras", params={"mercado": "CO"})
     assert respuesta.status_code == 200
     assert respuesta.headers["cache-control"] == "public, max-age=3600"
-    assert len(respuesta.json()) == 4
+    assert len(respuesta.json()) == 10
     for entidad in respuesta.json():
         _assert_valid(openapi_spec, "EntidadFinanciera", entidad)
 
