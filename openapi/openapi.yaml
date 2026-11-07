@@ -124,6 +124,8 @@ paths:
         - `bienvenida`: `nombre`, `urlWeb`, `anio`.
         - `verificacion-correo`: `nombre`, `enlaceVerificacion` (obligatoria), `anio`.
         - `poliza-emitida`: `nombre`, `numeroPoliza` (obligatoria), `urlWeb`, `anio`.
+        - `bienvenida-venta`: `nombre`, `urlWeb`, `anio`.
+        - `cuenta-activada`: `nombre`, `correo` (obligatoria), `contrasena` (obligatoria), `urlWeb`, `anio`.
       parameters:
         - name: tipo
           in: path
@@ -296,11 +298,13 @@ components:
 
     TipoPlantillaCorreo:
       type: string
-      enum: [bienvenida, verificacion-correo, poliza-emitida]
+      enum: [bienvenida, verificacion-correo, poliza-emitida, bienvenida-venta, cuenta-activada]
       description: |
         - `bienvenida` — correo que recibe quien acaba de crear su cuenta.
         - `verificacion-correo` — correo con el enlace para confirmar el correo.
         - `poliza-emitida` — correo con la póliza adjunta, al emitirse (BITS-101).
+        - `bienvenida-venta` — al cliente cuando un socio le contrata el seguro (BITS-379).
+        - `cuenta-activada` — datos de acceso del cliente creado por un socio (BITS-379).
 
     PlantillaCorreo:
       type: object

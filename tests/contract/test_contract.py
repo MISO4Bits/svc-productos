@@ -74,7 +74,13 @@ async def test_respuestas_cumplen_el_esquema(client, openapi_spec):
 
 
 async def test_plantillas_de_correo_cumplen_el_esquema(client, openapi_spec):
-    for tipo in ("bienvenida", "verificacion-correo", "poliza-emitida"):
+    for tipo in (
+        "bienvenida",
+        "verificacion-correo",
+        "poliza-emitida",
+        "bienvenida-venta",
+        "cuenta-activada",
+    ):
         respuesta = await client.get(f"/plantillas-correo/{tipo}", params=PARAMS)
         assert respuesta.status_code == 200
         _assert_valid(openapi_spec, "PlantillaCorreo", respuesta.json())
