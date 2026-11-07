@@ -200,6 +200,8 @@ class TipoPlantillaCorreo(StrEnum):
     BIENVENIDA = "bienvenida"
     VERIFICACION_CORREO = "verificacion-correo"
     POLIZA_EMITIDA = "poliza-emitida"
+    BIENVENIDA_VENTA = "bienvenida-venta"
+    CUENTA_ACTIVADA = "cuenta-activada"
 
 
 # Variables que cada plantilla puede usar: ``{{nombre}}``. Quien la rellena
@@ -208,12 +210,18 @@ VARIABLES_PLANTILLA: dict[TipoPlantillaCorreo, frozenset[str]] = {
     TipoPlantillaCorreo.BIENVENIDA: frozenset({"nombre", "urlWeb", "anio"}),
     TipoPlantillaCorreo.VERIFICACION_CORREO: frozenset({"nombre", "enlaceVerificacion", "anio"}),
     TipoPlantillaCorreo.POLIZA_EMITIDA: frozenset({"nombre", "numeroPoliza", "urlWeb", "anio"}),
+    TipoPlantillaCorreo.BIENVENIDA_VENTA: frozenset({"nombre", "urlWeb", "anio"}),
+    TipoPlantillaCorreo.CUENTA_ACTIVADA: frozenset(
+        {"nombre", "correo", "contrasena", "urlWeb", "anio"}
+    ),
 }
 # Sin esta variable el correo no sirve (la verificación sin enlace).
 VARIABLES_REQUERIDAS: dict[TipoPlantillaCorreo, frozenset[str]] = {
     TipoPlantillaCorreo.BIENVENIDA: frozenset(),
     TipoPlantillaCorreo.VERIFICACION_CORREO: frozenset({"enlaceVerificacion"}),
     TipoPlantillaCorreo.POLIZA_EMITIDA: frozenset({"numeroPoliza"}),
+    TipoPlantillaCorreo.BIENVENIDA_VENTA: frozenset(),
+    TipoPlantillaCorreo.CUENTA_ACTIVADA: frozenset({"correo", "contrasena"}),
 }
 
 _MARCADOR = re.compile(r"\{\{(\w+)\}\}")

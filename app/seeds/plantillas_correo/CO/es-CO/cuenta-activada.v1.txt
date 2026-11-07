@@ -1,0 +1,11 @@
+Tu cuenta está activa, {{nombre}}
+
+Creamos tu cuenta de Solventa para que veas tu póliza. Entra con el correo {{correo}} y esta contraseña temporal: {{contrasena}}
+
+Lo que sigue
+
+- Cambia tu contraseña: hazlo al entrar por primera vez, desde tu perfil.
+- No la compartas: Solventa nunca te pedirá tu contraseña por correo ni por teléfono.
+- Si no reconoces esta cuenta: responde a este correo y la cerramos.
+
+Recibes este correo porque un asesor de Solventa creó tu cuenta.

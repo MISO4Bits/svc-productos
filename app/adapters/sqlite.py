@@ -57,7 +57,8 @@ END;
 CREATE TABLE IF NOT EXISTS plantilla_correo_version (
     mercado TEXT NOT NULL,
     idioma TEXT NOT NULL,
-    tipo TEXT NOT NULL CHECK (tipo IN ('bienvenida', 'verificacion-correo', 'poliza-emitida')),
+    tipo TEXT NOT NULL CHECK (tipo IN ('bienvenida', 'verificacion-correo', 'poliza-emitida',
+                    'bienvenida-venta', 'cuenta-activada')),
     version INTEGER NOT NULL CHECK (version >= 1),
     asunto TEXT NOT NULL,
     cuerpo_html TEXT NOT NULL,
@@ -100,14 +101,14 @@ class SqliteDatabase:
 
     @staticmethod
     async def _ampliar_tipos_de_plantilla(conn: aiosqlite.Connection) -> None:
-        """Igual que con los documentos: una base creada antes del tipo ``poliza-emitida``
+        """Igual que con los documentos: una base creada antes del tipo ``cuenta-activada``
         rechazaría la plantilla nueva por su CHECK, que SQLite no deja modificar."""
         cursor = await conn.execute(
             "SELECT sql FROM sqlite_master "
             "WHERE type = 'table' AND name = 'plantilla_correo_version'"
         )
         fila = await cursor.fetchone()
-        if fila is None or "'poliza-emitida'" in fila["sql"]:
+        if fila is None or "'cuenta-activada'" in fila["sql"]:
             return
         await conn.executescript(
             """

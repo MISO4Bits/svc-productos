@@ -1,0 +1,11 @@
+Hola, {{nombre}}: contrataste tu seguro de vida
+
+Un asesor de Solventa contrató a tu nombre un seguro de vida que protege el crédito de tu vivienda. Tu póliza va en un correo aparte y, en otro, los datos para entrar a tu cuenta.
+
+Lo que sigue
+
+- Revisa tu póliza: cuando te llegue, verifica tus datos, las coberturas y el valor que pagas al mes.
+- Entra a tu cuenta: con los datos del siguiente correo puedes ver tu póliza en la web o en la app de Solventa.
+- Si algo no cuadra: responde a este correo y lo revisamos contigo.
+
+Recibes este correo porque un asesor de Solventa contrató un seguro a tu nombre.
