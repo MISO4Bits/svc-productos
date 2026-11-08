@@ -221,7 +221,7 @@ async def test_obtener_vigente_inexistente_lanza_no_encontrada(service):
 
 async def test_semillas_reales_cargan_las_plantillas_de_es_co(service):
     nuevas = await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH)
-    assert nuevas == 5
+    assert nuevas == 6
     bienvenida = await service.obtener_vigente(CO, ES, BIENVENIDA)
     verificacion = await service.obtener_vigente(CO, ES, VERIFICACION)
     assert bienvenida.asunto == "Te damos la bienvenida a Solventa"
@@ -232,7 +232,7 @@ async def test_semillas_reales_cargan_las_plantillas_de_es_co(service):
 
 
 async def test_semillas_son_idempotentes(service):
-    assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 5
+    assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 6
     assert await service.cargar_semillas("seed-inicial", SEEDS_PLANTILLAS_PATH) == 0
 
 

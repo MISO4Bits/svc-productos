@@ -1,0 +1,11 @@
+Te damos la bienvenida, {{nombre}}
+
+Un asesor de Solventa creó tu cuenta para que veas y manejes el seguro de vida que protege el crédito de tu vivienda. En otro correo te mandamos el correo y la contraseña temporal para entrar.
+
+Lo que sigue
+
+- Entra a tu cuenta: con el correo y la contraseña temporal que te enviamos aparte, entra a la web o a la app de Solventa.
+- Cambia tu contraseña: hazlo la primera vez que entres, desde tu perfil.
+- Si algo no cuadra: responde a este correo y lo revisamos contigo.
+
+Recibes este correo porque un asesor de Solventa creó tu cuenta.
