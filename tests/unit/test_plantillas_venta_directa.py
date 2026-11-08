@@ -45,7 +45,10 @@ async def test_la_bienvenida_de_la_venta_se_publica_con_su_asunto(client):
 
     cuerpo = respuesta.json()
     assert respuesta.status_code == 200
-    assert cuerpo["asunto"] == "Un asesor de Solventa contrató tu seguro de vida"
+    assert cuerpo["version"] == "V2"
+    assert cuerpo["asunto"] == "Un asesor de Solventa creó tu cuenta"
+    assert "contrataste" not in cuerpo["cuerpoHtml"]
+    assert "siguiente correo" not in cuerpo["cuerpoTexto"]
     assert "{{nombre}}" in cuerpo["cuerpoHtml"]
     assert "{{nombre}}" in cuerpo["cuerpoTexto"]
     assert "{{contrasena}}" not in cuerpo["cuerpoHtml"]
