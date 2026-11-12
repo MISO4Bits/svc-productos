@@ -50,8 +50,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await entidades.cargar_semillas()
             await tarifas.cargar_semillas()
             await catalogo_siniestros.cargar_semillas()
-        yield
-        shutdown_telemetry(telemetry)
+        try:
+            yield
+        finally:
+            shutdown_telemetry(telemetry)
 
     app = FastAPI(
         title="Productos y Configuración de Mercado",
