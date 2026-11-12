@@ -18,6 +18,7 @@ from app.api.routes import router
 from app.config import Settings, get_settings
 from app.logging_utils import SinRuidoDeHealthCheck
 from app.services import (
+    CatalogoSiniestrosService,
     DocumentosLegalesService,
     EntidadesFinancierasService,
     PlantillasCorreoService,
@@ -38,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     plantillas = PlantillasCorreoService(build_repositorio_plantillas(settings))
     entidades = EntidadesFinancierasService(build_repositorio_entidades(settings))
     tarifas = TarifasService()
+    catalogo_siniestros = CatalogoSiniestrosService()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -47,8 +49,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await plantillas.cargar_semillas(settings.seed_autor)
             await entidades.cargar_semillas()
             await tarifas.cargar_semillas()
-        yield
-        shutdown_telemetry(telemetry)
+            await catalogo_siniestros.cargar_semillas()
+        try:
+            yield
+        finally:
+            shutdown_telemetry(telemetry)
 
     app = FastAPI(
         title="Productos y Configuración de Mercado",
@@ -62,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.plantillas = plantillas
     app.state.entidades = entidades
     app.state.tarifas = tarifas
+    app.state.catalogo_siniestros = catalogo_siniestros
     app.state.documentos = documentos
 
     install_error_handlers(app)

@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.domain import (
+    CatalogoNoEncontrado,
     DocumentoLegalNoEncontrado,
     DomainError,
     PlantillaCorreoNoEncontrada,
@@ -57,6 +58,10 @@ def install_error_handlers(app: FastAPI) -> None:
         return problema(
             404, "Plantilla de correo no encontrada", detail=str(exc), instance=str(request.url)
         )
+
+    @app.exception_handler(CatalogoNoEncontrado)
+    async def _catalogo_no_encontrado(request: Request, exc: CatalogoNoEncontrado) -> JSONResponse:
+        return problema(404, "Catálogo no encontrado", detail=str(exc), instance=str(request.url))
 
     @app.exception_handler(TarifaNoEncontrada)
     async def _tarifa_no_encontrada(request: Request, exc: TarifaNoEncontrada) -> JSONResponse:

@@ -357,3 +357,111 @@ class TarifaVidaHipotecario:
                     "Las franjas de la tarifa deben ser contiguas y estar en orden de edad: "
                     f"{anterior.edad_hasta} → {siguiente.edad_desde}"
                 )
+
+
+# --- catálogo de siniestros: ayuda en sitio y oficinas (BITS-385) ---
+
+
+def _validar_punto(nombre: str, latitud: float, longitud: float) -> None:
+    if not -90 <= latitud <= 90 or not -180 <= longitud <= 180:
+        raise DomainError(f"{nombre} tiene coordenadas fuera de rango")
+
+
+@dataclass(frozen=True)
+class TipoAyuda:
+    id: str
+    nombre: str
+    orden: int
+
+
+@dataclass(frozen=True)
+class Localidad:
+    """Punto central de una localidad: la app lo usa cuando el cliente escribe su dirección en
+    vez de compartir la ubicación."""
+
+    id: str
+    nombre: str
+    ciudad: str
+    latitud: float
+    longitud: float
+
+
+@dataclass(frozen=True)
+class Prestador:
+    id: str
+    nombre: str
+    tipos: tuple[str, ...]
+    localidad: str
+    direccion: str
+    latitud: float
+    longitud: float
+    tiempo_llegada_min: int
+
+
+@dataclass(frozen=True)
+class OficinaBancaria:
+    id: str
+    banco: str
+    nombre: str
+    direccion: str
+    ciudad: str
+    latitud: float
+    longitud: float
+
+
+def _ids_unicos(nombre: str, ids: list[str]) -> None:
+    for id_ in ids:
+        if not id_.strip():
+            raise DomainError(f"Hay {nombre} sin id")
+    if len(set(ids)) != len(ids):
+        repetidos = sorted({i for i in ids if ids.count(i) > 1})
+        raise DomainError(f"Hay {nombre} con el id repetido: {repetidos}")
+
+
+@dataclass(frozen=True)
+class CatalogoSiniestros:
+    """Lo que la app necesita para pedir ayuda en sitio y mostrar oficinas del banco: tipos de
+    ayuda, localidades con su punto central, prestadores y oficinas. Es configuración del
+    mercado: se carga de una semilla al arrancar y un catálogo incoherente detiene el arranque,
+    para que la app nunca reciba un prestador con un tipo o una localidad que no existen."""
+
+    mercado: Mercado
+    version: int
+    tipos_ayuda: tuple[TipoAyuda, ...]
+    localidades: tuple[Localidad, ...]
+    prestadores: tuple[Prestador, ...]
+    oficinas: tuple[OficinaBancaria, ...]
+
+    def __post_init__(self) -> None:
+        if self.version < 1:
+            raise DomainError("La versión del catálogo debe ser 1 o mayor")
+        if not self.tipos_ayuda:
+            raise DomainError("El catálogo necesita al menos un tipo de ayuda")
+        _ids_unicos("tipos de ayuda", [t.id for t in self.tipos_ayuda])
+        _ids_unicos("localidades", [loc.id for loc in self.localidades])
+        _ids_unicos("prestadores", [p.id for p in self.prestadores])
+        _ids_unicos("oficinas", [o.id for o in self.oficinas])
+        tipos = {t.id for t in self.tipos_ayuda}
+        localidades = {loc.id for loc in self.localidades}
+        for loc in self.localidades:
+            _validar_punto(f"La localidad {loc.id}", loc.latitud, loc.longitud)
+        for p in self.prestadores:
+            if not p.nombre.strip() or not p.direccion.strip():
+                raise DomainError(f"El prestador {p.id} necesita nombre y dirección")
+            if not p.tipos or not set(p.tipos) <= tipos:
+                raise DomainError(f"El prestador {p.id} tiene un tipo de ayuda desconocido")
+            if p.localidad not in localidades:
+                raise DomainError(f"El prestador {p.id} tiene una localidad desconocida")
+            if p.tiempo_llegada_min < 1:
+                raise DomainError(f"El prestador {p.id} necesita un tiempo de llegada positivo")
+            _validar_punto(f"El prestador {p.id}", p.latitud, p.longitud)
+        for o in self.oficinas:
+            if not o.banco.strip() or not o.nombre.strip() or not o.direccion.strip():
+                raise DomainError(f"La oficina {o.id} necesita banco, nombre y dirección")
+            _validar_punto(f"La oficina {o.id}", o.latitud, o.longitud)
+
+
+class CatalogoNoEncontrado(DomainError):
+    def __init__(self, mercado: str) -> None:
+        super().__init__(f"No hay catálogo de siniestros para el mercado {mercado}")
+        self.mercado = mercado
