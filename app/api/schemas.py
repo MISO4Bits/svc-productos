@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 from app.domain import (
+    CatalogoSiniestros,
     DocumentoLegal,
     EntidadFinanciera,
     Mercado,
@@ -117,4 +118,71 @@ class TarifaVidaHipotecarioOut(_Model):
                 suma_asegurada_maxima=float(tarifa.hogar.suma_asegurada_maxima),
                 iva=float(tarifa.hogar.iva),
             ),
+        )
+
+
+class TipoAyudaOut(_Model):
+    id: str
+    nombre: str
+    orden: int
+
+
+class LocalidadOut(_Model):
+    id: str
+    nombre: str
+    ciudad: str
+    latitud: float
+    longitud: float
+
+
+class PrestadorOut(_Model):
+    id: str
+    nombre: str
+    tipos: list[str]
+    localidad: str
+    direccion: str
+    latitud: float
+    longitud: float
+    tiempo_llegada_min: int
+
+
+class OficinaBancariaOut(_Model):
+    id: str
+    banco: str
+    nombre: str
+    direccion: str
+    ciudad: str
+    latitud: float
+    longitud: float
+
+
+class CatalogoSiniestrosOut(_Model):
+    mercado: Mercado
+    version: int
+    tipos_ayuda: list[TipoAyudaOut]
+    localidades: list[LocalidadOut]
+    prestadores: list[PrestadorOut]
+    oficinas: list[OficinaBancariaOut]
+
+    @classmethod
+    def desde_dominio(cls, catalogo: CatalogoSiniestros) -> CatalogoSiniestrosOut:
+        return cls(
+            mercado=catalogo.mercado,
+            version=catalogo.version,
+            tipos_ayuda=[TipoAyudaOut.model_validate(t) for t in catalogo.tipos_ayuda],
+            localidades=[LocalidadOut.model_validate(loc) for loc in catalogo.localidades],
+            prestadores=[
+                PrestadorOut(
+                    id=p.id,
+                    nombre=p.nombre,
+                    tipos=list(p.tipos),
+                    localidad=p.localidad,
+                    direccion=p.direccion,
+                    latitud=p.latitud,
+                    longitud=p.longitud,
+                    tiempo_llegada_min=p.tiempo_llegada_min,
+                )
+                for p in catalogo.prestadores
+            ],
+            oficinas=[OficinaBancariaOut.model_validate(o) for o in catalogo.oficinas],
         )

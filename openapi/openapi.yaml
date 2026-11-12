@@ -193,6 +193,33 @@ paths:
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
 
+  /v1/catalogo-siniestros:
+    get:
+      operationId: obtenerCatalogoSiniestros
+      tags: [Catálogo de siniestros]
+      summary: Tipos de ayuda, localidades, prestadores y oficinas del mercado
+      description: |
+        Todo lo que la app necesita para pedir ayuda en sitio después de un incendio o un
+        terremoto, y para mostrar las oficinas del banco: los tipos de ayuda (`tiposAyuda`), las
+        localidades con su punto central (`localidades`, para cuando el cliente escribe su
+        dirección), los prestadores con su ubicación y tiempo de llegada (`prestadores`) y las
+        oficinas de Bancolombia y BBVA (`oficinas`). Va en una sola respuesta: la app filtra por
+        tipo y ordena por distancia en el teléfono. Se carga de una semilla al arrancar: cambiarlo
+        es editar el archivo, subir la `version` y desplegar. Se puede cachear una hora.
+      parameters:
+        - $ref: '#/components/parameters/Mercado'
+      responses:
+        '200':
+          description: Catálogo vigente del mercado.
+          headers:
+            Cache-Control:
+              schema: { type: string, examples: ['public, max-age=3600'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogoSiniestros' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
 components:
   securitySchemes:
     serviceAuth:
@@ -323,6 +350,82 @@ components:
         cuerpoTexto:
           type: string
           description: Cuerpo en texto plano (alternativa para clientes de correo sin HTML), sin rellenar.
+
+    TipoAyuda:
+      type: object
+      additionalProperties: false
+      required: [id, nombre, orden]
+      properties:
+        id: { type: string, examples: [plomeria] }
+        nombre: { type: string, examples: [Plomería] }
+        orden: { type: integer, minimum: 1 }
+
+    Localidad:
+      type: object
+      additionalProperties: false
+      required: [id, nombre, ciudad, latitud, longitud]
+      properties:
+        id: { type: string, examples: [usaquen] }
+        nombre: { type: string, examples: [Usaquén] }
+        ciudad: { type: string, examples: [Bogotá] }
+        latitud: { type: number, minimum: -90, maximum: 90 }
+        longitud: { type: number, minimum: -180, maximum: 180 }
+
+    Prestador:
+      type: object
+      additionalProperties: false
+      required: [id, nombre, tipos, localidad, direccion, latitud, longitud, tiempoLlegadaMin]
+      properties:
+        id: { type: string, examples: [pr-001] }
+        nombre: { type: string }
+        tipos:
+          type: array
+          minItems: 1
+          items: { type: string }
+          description: Ids de `tiposAyuda` que atiende.
+        localidad:
+          type: string
+          description: Id de una de las `localidades`.
+        direccion: { type: string }
+        latitud: { type: number, minimum: -90, maximum: 90 }
+        longitud: { type: number, minimum: -180, maximum: 180 }
+        tiempoLlegadaMin: { type: integer, minimum: 1 }
+
+    OficinaBancaria:
+      type: object
+      additionalProperties: false
+      required: [id, banco, nombre, direccion, ciudad, latitud, longitud]
+      properties:
+        id: { type: string, examples: [ofi-bancolombia-001] }
+        banco: { type: string, examples: [Bancolombia] }
+        nombre: { type: string }
+        direccion: { type: string }
+        ciudad: { type: string }
+        latitud: { type: number, minimum: -90, maximum: 90 }
+        longitud: { type: number, minimum: -180, maximum: 180 }
+
+    CatalogoSiniestros:
+      type: object
+      additionalProperties: false
+      required: [mercado, version, tiposAyuda, localidades, prestadores, oficinas]
+      properties:
+        mercado: { $ref: '#/components/schemas/Mercado' }
+        version:
+          type: integer
+          minimum: 1
+          description: Sube cada vez que cambia el contenido del catálogo.
+        tiposAyuda:
+          type: array
+          items: { $ref: '#/components/schemas/TipoAyuda' }
+        localidades:
+          type: array
+          items: { $ref: '#/components/schemas/Localidad' }
+        prestadores:
+          type: array
+          items: { $ref: '#/components/schemas/Prestador' }
+        oficinas:
+          type: array
+          items: { $ref: '#/components/schemas/OficinaBancaria' }
 
     TarifaVidaHipotecario:
       type: object

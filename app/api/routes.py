@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from app.api.schemas import (
     PATRON_IDIOMA,
     PATRON_VERSION,
+    CatalogoSiniestrosOut,
     DocumentoLegalOut,
     EntidadFinancieraOut,
     PlantillaCorreoOut,
@@ -22,6 +23,7 @@ from app.domain import (
     parsear_version,
 )
 from app.services import (
+    CatalogoSiniestrosService,
     DocumentosLegalesService,
     EntidadesFinancierasService,
     PlantillasCorreoService,
@@ -49,6 +51,10 @@ def get_tarifas(request: Request) -> TarifasService:
     return request.app.state.tarifas
 
 
+def get_catalogo_siniestros(request: Request) -> CatalogoSiniestrosService:
+    return request.app.state.catalogo_siniestros
+
+
 def get_entidades(request: Request) -> EntidadesFinancierasService:
     return request.app.state.entidades
 
@@ -57,6 +63,7 @@ ServiceDep = Annotated[DocumentosLegalesService, Depends(get_service)]
 EntidadesDep = Annotated[EntidadesFinancierasService, Depends(get_entidades)]
 PlantillasDep = Annotated[PlantillasCorreoService, Depends(get_plantillas)]
 TarifasDep = Annotated[TarifasService, Depends(get_tarifas)]
+CatalogoSiniestrosDep = Annotated[CatalogoSiniestrosService, Depends(get_catalogo_siniestros)]
 MercadoQuery = Annotated[Mercado, Query()]
 IdiomaQuery = Annotated[str, Query(pattern=PATRON_IDIOMA)]
 
@@ -148,3 +155,17 @@ async def obtener_tarifa_vida_hipotecario(
     tarifa = await service.obtener(mercado)
     response.headers["Cache-Control"] = CACHE_ENTIDADES
     return TarifaVidaHipotecarioOut.desde_dominio(tarifa)
+
+
+@router.get(
+    "/v1/catalogo-siniestros",
+    response_model=CatalogoSiniestrosOut,
+    tags=["Catálogo de siniestros"],
+)
+async def obtener_catalogo_siniestros(
+    service: CatalogoSiniestrosDep, response: Response, mercado: MercadoQuery
+) -> CatalogoSiniestrosOut:
+    logger.info("GET /v1/catalogo-siniestros: solicitud recibida mercado=%s", mercado)
+    catalogo = await service.obtener(mercado)
+    response.headers["Cache-Control"] = CACHE_ENTIDADES
+    return CatalogoSiniestrosOut.desde_dominio(catalogo)

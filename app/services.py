@@ -11,17 +11,23 @@ from pathlib import Path
 
 from app.domain import (
     TIPOS_DE_REGISTRO,
+    CatalogoNoEncontrado,
+    CatalogoSiniestros,
     DocumentoLegal,
     DocumentoLegalNoEncontrado,
     EntidadFinanciera,
     FranjaTarifa,
+    Localidad,
     Mercado,
+    OficinaBancaria,
     PlantillaCorreo,
     PlantillaCorreoNoEncontrada,
     PlantillaInvalida,
+    Prestador,
     TarifaHogar,
     TarifaNoEncontrada,
     TarifaVidaHipotecario,
+    TipoAyuda,
     TipoDocumentoLegal,
     TipoPlantillaCorreo,
     formatear_version,
@@ -38,6 +44,9 @@ SEEDS_PATH = Path(__file__).resolve().parent / "seeds" / "documentos_legales.jso
 SEEDS_ENTIDADES_PATH = Path(__file__).resolve().parent / "seeds" / "entidades_financieras.json"
 SEEDS_PLANTILLAS_PATH = Path(__file__).resolve().parent / "seeds" / "plantillas_correo"
 SEEDS_TARIFAS_PATH = Path(__file__).resolve().parent / "seeds" / "tarifas_vida_hipotecario.json"
+SEEDS_CATALOGO_SINIESTROS_PATH = (
+    Path(__file__).resolve().parent / "seeds" / "catalogo_siniestros.json"
+)
 
 _ARCHIVO_PLANTILLA = re.compile(r"^(?P<tipo>[a-z-]+)\.v(?P<version>[1-9][0-9]*)\.html$")
 _TITULO = re.compile(r"<title>(?P<asunto>.*?)</title>", re.IGNORECASE | re.DOTALL)
@@ -218,5 +227,72 @@ class TarifasService:
             tarifa.mercado,
             tarifa.version,
             len(tarifa.franjas),
+        )
+        return 1
+
+
+class CatalogoSiniestrosService:
+    """Catálogo de ayuda en sitio y oficinas, cargado de una semilla al arrancar.
+
+    No se edita por API: cambiarlo es editar el archivo (subiendo su ``version``) y desplegar.
+    Vive en memoria; no hay nada que persistir.
+    """
+
+    def __init__(self) -> None:
+        self._catalogos: dict[Mercado, CatalogoSiniestros] = {}
+
+    async def obtener(self, mercado: Mercado) -> CatalogoSiniestros:
+        catalogo = self._catalogos.get(mercado)
+        if catalogo is None:
+            raise CatalogoNoEncontrado(str(mercado))
+        return catalogo
+
+    async def cargar_semillas(self, ruta: Path = SEEDS_CATALOGO_SINIESTROS_PATH) -> int:
+        """Carga el catálogo de ``ruta``. Un catálogo incoherente detiene el arranque."""
+        entrada = json.loads(ruta.read_text(encoding="utf-8"))
+        catalogo = CatalogoSiniestros(
+            mercado=Mercado(entrada["mercado"]),
+            version=entrada["version"],
+            tipos_ayuda=tuple(
+                TipoAyuda(t["id"], t["nombre"], t["orden"]) for t in entrada["tiposAyuda"]
+            ),
+            localidades=tuple(
+                Localidad(loc["id"], loc["nombre"], loc["ciudad"], loc["latitud"], loc["longitud"])
+                for loc in entrada["localidades"]
+            ),
+            prestadores=tuple(
+                Prestador(
+                    id=p["id"],
+                    nombre=p["nombre"],
+                    tipos=tuple(p["tipos"]),
+                    localidad=p["localidad"],
+                    direccion=p["direccion"],
+                    latitud=p["latitud"],
+                    longitud=p["longitud"],
+                    tiempo_llegada_min=p["tiempoLlegadaMin"],
+                )
+                for p in entrada["prestadores"]
+            ),
+            oficinas=tuple(
+                OficinaBancaria(
+                    id=o["id"],
+                    banco=o["banco"],
+                    nombre=o["nombre"],
+                    direccion=o["direccion"],
+                    ciudad=o["ciudad"],
+                    latitud=o["latitud"],
+                    longitud=o["longitud"],
+                )
+                for o in entrada["oficinas"]
+            ),
+        )
+        self._catalogos[catalogo.mercado] = catalogo
+        logger.info(
+            "carga inicial del catálogo de siniestros: mercado=%s version=%s prestadores=%s "
+            "oficinas=%s",
+            catalogo.mercado,
+            catalogo.version,
+            len(catalogo.prestadores),
+            len(catalogo.oficinas),
         )
         return 1

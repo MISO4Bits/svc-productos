@@ -30,7 +30,13 @@ def _app_operations(app) -> set[tuple[str, str]]:
         (method.upper(), path)
         for path, item in app.openapi()["paths"].items()
         if path.startswith(
-            ("/documentos-legales", "/plantillas-correo", "/entidades-financieras", "/v1/tarifas")
+            (
+                "/documentos-legales",
+                "/plantillas-correo",
+                "/entidades-financieras",
+                "/v1/tarifas",
+                "/v1/catalogo-siniestros",
+            )
         )
         for method in item
         if method.lower() in _METODOS
@@ -145,3 +151,14 @@ async def test_tarifa_sin_mercado_cumple_problem_details(client, openapi_spec):
 
     assert invalido.status_code == 400
     _assert_valid(openapi_spec, "Problema", invalido.json())
+
+
+async def test_el_catalogo_de_siniestros_cumple_el_esquema(client, openapi_spec):
+    respuesta = await client.get("/v1/catalogo-siniestros", params=PARAMS)
+
+    assert respuesta.status_code == 200
+    _assert_valid(openapi_spec, "CatalogoSiniestros", respuesta.json())
+
+    sin_mercado = await client.get("/v1/catalogo-siniestros")
+    assert sin_mercado.status_code == 400
+    _assert_valid(openapi_spec, "Problema", sin_mercado.json())

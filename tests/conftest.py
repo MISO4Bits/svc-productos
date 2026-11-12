@@ -37,6 +37,7 @@ async def app(settings):
     await application.state.plantillas.cargar_semillas(settings.seed_autor)
     await application.state.entidades.cargar_semillas()
     await application.state.tarifas.cargar_semillas()
+    await application.state.catalogo_siniestros.cargar_semillas()
     return application
 
 
